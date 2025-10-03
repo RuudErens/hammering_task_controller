@@ -20,6 +20,12 @@ VerboseStateFactory: false
 robots:
   ground:
     module: env/ground
+  nail:
+    module: object/nail
+    init_pos:
+      translation: [0.55, 0.30 , 0.9]
+      rotation: [0, 0.7, 0.7]
+
 # General constraints, always on
 constraints:
 - type: contact
