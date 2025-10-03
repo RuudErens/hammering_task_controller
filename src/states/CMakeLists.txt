@@ -1,3 +1,4 @@
 add_fsm_state_simple(HammeringTaskNew_Initial)
+add_fsm_state_simple(Get_In_Position_Task)
 
 add_fsm_data_directory(data)

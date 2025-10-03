@@ -15,6 +15,10 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin)
 
 add_controller(${PROJECT_NAME}_controller lib.cpp "")
+find_package(visualization_msgs REQUIRED)
+find_package(ament_cmake REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}_controller PUBLIC ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_rtc_ros ${catkin_LIBRARIES})
 
 add_subdirectory(states)

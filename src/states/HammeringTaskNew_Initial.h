@@ -11,4 +11,8 @@ struct HammeringTaskNew_Initial : mc_control::fsm::State
   bool run(mc_control::fsm::Controller & ctl) override;
 
   void teardown(mc_control::fsm::Controller & ctl) override;
+
+  private:
+    bool _positionning_hammer_clicked = false;
+
 };

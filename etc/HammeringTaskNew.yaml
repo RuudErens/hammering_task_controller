@@ -7,15 +7,6 @@ StepByStep: true
 # otherwise the FSM holds the last state until transition
 IdleKeepState: false
 # Where to look for state libraries
-
-# StatesLibraries:
-# - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@"
-# - "@MC_STATES_RUNTIME_INSTALL_PREFIX@"
-# # Where to look for state files
-# StatesFiles:
-# - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@/data"
-# - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
-
 StatesLibraries:
   - "@MC_STATES_DEFAULT_INSTALL_PREFIX@"
   - "@STATES_INSTALL_PREFIX@/@PROJECT_NAME@/states"
@@ -23,7 +14,6 @@ StatesLibraries:
 StatesFiles:
   - "@MC_STATES_DEFAULT_INSTALL_PREFIX@/data"
   - "@STATES_INSTALL_PREFIX@/@PROJECT_NAME@/states/data" 
-
 # If true, state factory will be more verbose
 VerboseStateFactory: false
 # Additional robots to load
@@ -34,7 +24,9 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [0, 0.7, 0.7]
+      rotation: [0.0, 0.0, 1.57]
+
+
 
 # General constraints, always on
 constraints:
@@ -47,8 +39,13 @@ constraints:
 collisions:
 - type: collision
   useMinimal: true
+# - type: collision
+#   r1: hrp5_p
+#   r2: nail
+  # collisions:
+  #   body1: hammer
+  #   body2: nail
 
-# Initial set of contacts
 contacts:
 - r2: ground
   r1Surface: LeftFoot
@@ -74,6 +71,11 @@ states:
         type: posture
         stiffness: 1.0
         weight: 1.0
+        # posture:
+        #   - [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7]
+        #   - [0]
+        #   - []
+        #   - [1.5]
 
   Hammer::Standing:
     base: MetaTasks
@@ -112,7 +114,7 @@ states:
     
   Initial_And_Standing: 
     base: Parallel
-    states: [Hammer::Standing, HammeringTaskNew_Initial]
+    states: [Hammer::Standing, Hammering_FSM_Controller_Initial]
 
 
 
@@ -134,11 +136,12 @@ states:
       nail: "nail"
     
     magic_values:
+      # max_control_point_height: 1.733 #found by calculation with the ndcurves doc with the added control points
       max_control_point_height: 2
 
       bezier_curve_max_duration: 1
-      task_stiffness: 100000
-      task_weight: 100
+      task_stiffness: 5000
+      task_weight: 10
       epsilon: 0.02
       oriWp_time: 0.9
       force_norm_threshold: 1
@@ -176,6 +179,94 @@ states:
         z:
           init: 0
           end: 0
+
+
+  # Hammer::Hit:
+  #   base: Hit_Task
+
+  #   timestep: 0.002 #s
+    
+  #   gui:
+  #     stop_hammering_button_name: "Stop hammering"
+
+  #   quality_of_life:
+  #     bezier_curve_verbose_active: false
+
+  #   frames:
+  #     Hammer_Head_frame: "Hammer_Head"
+  #     nail: "nail"
+    
+  #   magic_values:
+  #     max_control_point_height: 2.15
+  #     bezier_curve_max_duration: 1
+  #     task_stiffness: 100
+  #     task_weight: 1000
+  #     epsilon: 0.13
+  #     oriWp_time: 3
+    #   force_norm_threshold: 1
+
+    # curve_constraints:
+    #   linear_velocity:
+    #     x:
+    #       init: 0
+    #       end: 0
+    #     y: 
+    #       init: 0
+    #       end: 0
+    #     z:
+    #       init: 0
+    #       end: -1
+
+    #   linear_acceleration:
+    #     x:
+    #       init: 0
+    #       end: 0
+    #     y: 
+    #       init: 0
+    #       end: 0
+    #     z:
+    #       init: -1
+    #       end: 0
+    #   linear_jerk:
+    #     x:
+    #       init: 0
+    #       end: 0
+    #     y: 
+    #       init: 0
+    #       end: 0
+    #     z:
+    #       init: 0
+    #       end: 0
+
+
+  # Hammer::Posture_with_CoM:
+  #   base: Parallel
+  #   states: [CoM, Hammer::PostureTask]
+
+
+  # Hammer::Post_Impact_Task:
+  #   base: Post_Impact_Task
+
+  #   quality_of_life:
+  #     bezier_curve_verbose_active: false
+
+  #   frames:
+  #     Hammer_Head_frame: "Hammer_Head"
+
+  #   magic_values:
+  #     epsilon: 0.2
+  #     bezier_curve_max_duration: 2
+  #     task_stiffness: 100
+  #     task_weight: 1000
+  #     post_impact_final_height: 1
+  #     coefficient_of_restitution: 0.46 #Dont fully trust that value I got it from google AI for iron-alumimium collision  
+
+  #   curve_constraints:
+  #     linear_velocity:
+  #       z:
+  #         init: 0
+  #         end: 0
+
 
   Get_In_Position_And_Standing: 
     base: Parallel
@@ -232,23 +323,11 @@ transitions:
 # Initial state
 init: Hammer::HammeringFSM
 
-
-# Some options for a specific robot
 hrp5_p:
   posture:
-    stiffness: 1
-    weight: 10
-  # ff:
-  #   stiffness: 2
-  #   weight: 100
-# # Implement some additional text states
-# states: {}
-# # Transitions map
-# transitions:
-# - [HammeringTaskNew_Initial, OK, HammeringTaskNew_Initial, Strict]
-# # Initial state
-# init: HammeringTaskNew_Initial
-
+    stiffness: 5
+    weight: 1
+  
 ObserverPipelines:
   name: "ObserverPipeline"
   gui: true
