@@ -140,8 +140,8 @@ states:
       max_control_point_height: 2
 
       bezier_curve_max_duration: 1
-      task_stiffness: 5000
-      task_weight: 10
+      task_stiffness: 100000
+      task_weight: 100
       epsilon: 0.02
       oriWp_time: 0.9
       force_norm_threshold: 1
