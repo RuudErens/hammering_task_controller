@@ -3,8 +3,6 @@
 
 #include "../HammeringTaskNew.h"
 
-// TODO: delete the commented out parts as there are general example lines. Do this once the project works
-
 void HammeringTaskNew_Initial::configure(const mc_rtc::Configuration & config)
 {
 }
@@ -22,9 +20,6 @@ void HammeringTaskNew_Initial::start(mc_control::fsm::Controller & ctl_)
 
 bool HammeringTaskNew_Initial::run(mc_control::fsm::Controller & ctl_)
 {
-  // auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
-  // output("OK");
-
   if (_positionning_hammer_clicked)
   {
       output("BUTTON_CLICKED");
@@ -35,7 +30,6 @@ bool HammeringTaskNew_Initial::run(mc_control::fsm::Controller & ctl_)
 
 void HammeringTaskNew_Initial::teardown(mc_control::fsm::Controller & ctl_)
 {
-  // auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
   ctl_.gui()->removeElement({}, "Start hammering");
 }
 

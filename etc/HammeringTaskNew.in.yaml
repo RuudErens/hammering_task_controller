@@ -193,29 +193,8 @@ states:
   Hammer::HammeringFSM:
     base: Meta 
     transitions:
-      # - [Initial_And_Standing, BUTTON_CLICKED, Get_In_Position_And_Standing, Auto]
       - [Initial_And_Standing, BUTTON_CLICKED, Get_In_Position_NoLIPM, Auto]
-
-
-      # - [Initial_And_Standing, BUTTON_CLICKED, Hammer::Posture_with_CoM, Auto]
-
-      # - [Get_In_Position_And_Standing, STOP, Hammer::HammeringFSM_Finish, Auto]
-      # - [Get_In_Position_And_Standing, STOP, Hit, Auto]
-
-      # - [Get_In_Position_NoLIPM, STOP, Initial_And_Standing, Auto]
       - [Get_In_Position_NoLIPM, STOP, Hammer::HammeringFSM_Finish, Auto]
-
-      
-
-      # - [Hit, IMPACT_DETECTED, Initial_And_Standing, Auto]
-
-      # - [Hit, IMPACT_DETECTED, Hammer::HammeringFSM_Finish, Auto]
-      # - [Hammer::HammeringFSM_Finish, HAMMERING_HEIGHT_REACHED, Initial_And_Standing, Auto]
-
-
-      # - [Hammer::HammeringFSM_Hammering, Stop , Hammer::HammeringFSM_Finish, Auto]
-      # - [Hammer::HammeringFSM_Finish, Auto , Hammer::HammeringFSM_Initial, Auto]
-      # - [Hammer::HammeringFSM_Finish, Start , Hammer::HammeringFSM_Hammering, Auto]
 
 # Transitions map
 transitions:
