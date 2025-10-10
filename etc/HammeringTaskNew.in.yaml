@@ -7,7 +7,6 @@ StepByStep: true
 # otherwise the FSM holds the last state until transition
 IdleKeepState: false
 # Where to look for state libraries
-
 StatesLibraries:
   - "@MC_STATES_DEFAULT_INSTALL_PREFIX@"
   - "@STATES_INSTALL_PREFIX@/@PROJECT_NAME@/states"
@@ -15,9 +14,11 @@ StatesLibraries:
 StatesFiles:
   - "@MC_STATES_DEFAULT_INSTALL_PREFIX@/data"
   - "@STATES_INSTALL_PREFIX@/@PROJECT_NAME@/states/data" 
-
 # If true, state factory will be more verbose
 VerboseStateFactory: false
+
+
+
 # Additional robots to load
 robots:
   ground:
@@ -26,7 +27,9 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [0, 0.7, 0.7]
+      rotation: [0, 0, 1.57]
+
+
 
 # General constraints, always on
 constraints:
@@ -39,8 +42,13 @@ constraints:
 collisions:
 - type: collision
   useMinimal: true
+# - type: collision
+#   r1: hrp5_p
+#   r2: nail
+  # collisions:
+  #   body1: hammer
+  #   body2: nail
 
-# Initial set of contacts
 contacts:
 - r2: ground
   r1Surface: LeftFoot
@@ -49,7 +57,80 @@ contacts:
   r1Surface: RightFoot
   r2Surface: AllGround
 
+global_controller_params:
+  timestep: 0.002 #s, in the mc rtc config file
+  gui:
+    stop_hammering_button_name: "Stop hammering"
+
+  quality_of_life:
+    bezier_curve_verbose_active: false
+    jacobian_verbose_active: false
+ 
+  frames:
+    Hammer_Head_frame: "Hammer_Head"
+    nail: "nail"
+      
+  magic_values:
+    #No real meaning behind these values
+    magic_force_threshold: 1
+
+
 states:
+
+  Hammer::Get_In_Position_Task:
+    #c.f. Get_In_Position_Task.cpp (though it needs a better name now)
+    base: Get_In_Position_Task
+
+    magic_values:
+      #No real meaning behind these values
+
+      magic_BSpline_max_duration: 1 #seconds
+      magic_BSpline_task_stiffness: 100000
+      magic_BSpline_task_weight: 10
+
+      magic_posture_task_weight: 1
+      magic_effective_mass_maximization_task_weight: 100
+
+      magic_vector_orientation_task_weight: 10
+      magic_vector_orientation_task_stiffness: 200
+      magic_vector_orientation_task_dimweight_x: 10000
+      magic_vector_orientation_task_dimweight_y: 10000
+      magic_vector_orientation_task_dimweight_z: 1
+
+    curve_constraints:
+      magic_normal_final_velocity: -2
+      linear_velocity:
+        x:
+          init: 0
+        y: 
+          init: 0
+        z:
+          init: 0
+      linear_acceleration:
+        x:
+          init: 0
+          end: 0
+        y: 
+          init: 0
+          end: 0
+        z:
+          init: 0
+          end: 0
+      
+      orientation:
+        enable_BSpline_orientation: false
+
+  Hammer::Post_Impact_Task:
+    #c.f. Post_Impact_Task.cpp
+    base: Post_Impact_Task
+
+    magic_values:
+      #No real meaning behind these values
+      magic_posture_task_weight: 100
+      magic_posture_task_stiffness: 100
+      magic_posture_task_epsilon: 1.03
+
+  # ------------------------ not directly used states ----------------------
   CoM:
     base: MetaTasks
     tasks:
@@ -59,14 +140,7 @@ states:
         weight: 3000
         stiffness: 100  
         
-  Hammer::PostureTask:
-    base: MetaTasks
-    tasks:
-      Posture:
-        type: posture
-        stiffness: 1.0
-        weight: 1.0
-
+  #LIPM
   Hammer::Standing:
     base: MetaTasks
     tasks:
@@ -101,100 +175,25 @@ states:
             dimWeight: [1 , 1 , 1]
             weight: 5000
             height: 0.92
-    
-  Initial_And_Standing: 
+
+      
+  Initial_And_Standing_LIPM: 
     base: Parallel
     states: [Hammer::Standing, HammeringTaskNew_Initial]
 
-
-
-  Hammer::Get_In_Position_Task:
-    base: Get_In_Position_Task
-
-    timestep: 0.002 #s, in the mc rtc config file
-
-
-    gui:
-      stop_hammering_button_name: "Stop hammering"
-
-    quality_of_life:
-      bezier_curve_verbose_active: false
-      jacobian_verbose_active: false
-
-    frames:
-      Hammer_Head_frame: "Hammer_Head"
-      nail: "nail"
-    
-    magic_values:
-      max_control_point_height: 2
-
-      bezier_curve_max_duration: 1
-      task_stiffness: 100000
-      task_weight: 100
-      epsilon: 0.02
-      oriWp_time: 0.9
-      force_norm_threshold: 1
-      posture_task_weight: 1
-      effective_mass_maximization_task_weight: 1
-
-    curve_constraints:
-      linear_velocity:
-        x:
-          init: 0
-          end: 0
-        y: 
-          init: 0
-          end: 0
-        z:
-          init: 0
-          end: -2
-      linear_acceleration:
-        x:
-          init: 0
-          end: 0
-        y: 
-          init: 0
-          end: 0
-        z:
-          init: 0
-          end: 0
-      linear_jerk:
-        x:
-          init: 0
-          end: 0
-        y: 
-          init: 0
-          end: 0
-        z:
-          init: 0
-          end: 0
-
-  Get_In_Position_And_Standing: 
+  Get_In_Position_And_Standing_LIPM: 
     base: Parallel
     states: [Hammer::Standing, Hammer::Get_In_Position_Task]
 
-  Get_In_Position_NoLIPM: 
-    base: Parallel
-    states: [Hammer::Get_In_Position_Task]
-
-  Get_In_Position_And_Standing_With_CoM: 
-    base: Parallel
-    states: [Hammer::Standing, Hammer::Get_In_Position_Task, CoM]
 
 
-  Hit:
-    base: Parallel
-    states: [Hammer::Standing, Hammer::Hit]
-
-  Hammer::HammeringFSM_Finish: 
-    base: Parallel
-    states: [Hammer::Standing]
-  
+  # ------------------ State using transitions between defined states ----------------------
   Hammer::HammeringFSM:
-    base: Meta 
+    base: Meta
     transitions:
-      - [Initial_And_Standing, BUTTON_CLICKED, Get_In_Position_NoLIPM, Auto]
-      - [Get_In_Position_NoLIPM, STOP, Hammer::HammeringFSM_Finish, Auto]
+      - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
+      - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
+
 
 # Transitions map
 transitions:
@@ -203,13 +202,11 @@ transitions:
 # Initial state
 init: Hammer::HammeringFSM
 
-
-# Some options for a specific robot
 hrp5_p:
   posture:
     stiffness: 5
     weight: 1
-
+  
 ObserverPipelines:
   name: "ObserverPipeline"
   gui: true
