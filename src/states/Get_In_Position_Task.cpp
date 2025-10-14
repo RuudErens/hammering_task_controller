@@ -102,8 +102,11 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
                                                   ctl, 
                                                   ctl.nail_normal_vector_world_frame);
   ctl.hammer_tip_actual_velocity_vector = ctl.robot().frame(ctl.hammer_head_frame_name).velocity().linear();
+  ctl.hammer_tip_actual_position_vector = ctl.robot().frame(ctl.hammer_head_frame_name).position().translation();
   ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel, 
                                                                   ctl);
+  ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
+  ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
   ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass, 
                                                                     ctl.hammer_tip_actual_velocity_vector, 
                                                                     ctl.nail_normal_vector_world_frame);
@@ -136,6 +139,12 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
     mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
 
+    output("STOP");
+    return true;
+  }
+
+  if(stop){
+    mc_rtc::log::info("Stop button clicked");
     output("STOP");
     return true;
   }
@@ -181,7 +190,7 @@ const double Get_In_Position_Task::compute_projected_momentum(
   return effective_mass* (velocity_vector.x()*normal_vector.x()
                           + velocity_vector.y()*normal_vector.y()
                           + velocity_vector.z()*normal_vector.z());
-}                                                          
+}  // TODO: should this not use the 2-norm?
 
 
 const double Get_In_Position_Task::compute_effective_mass_with_mbc(

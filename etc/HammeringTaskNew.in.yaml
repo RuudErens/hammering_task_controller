@@ -36,7 +36,7 @@ constraints:
 - type: contact
 - type: dynamics
   damper: [0.1, 0.01, 0.5]
-- type: compoundJoint
+# - type: compoundJoint
 
 # Collision constraint
 collisions:
@@ -85,7 +85,7 @@ states:
       #No real meaning behind these values
 
       magic_BSpline_max_duration: 1 #seconds
-      magic_BSpline_task_stiffness: 100000
+      magic_BSpline_task_stiffness: 1000
       magic_BSpline_task_weight: 10
 
       magic_posture_task_weight: 1

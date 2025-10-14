@@ -1,7 +1,7 @@
 #include "HammeringTaskNew.h"
 
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config)
+: mc_control::fsm::Controller(rm, dt, config, Backend::TVM) //
 {
 
   config_.load(config);
@@ -100,7 +100,13 @@ void HammeringTaskNew::add_logs()
       
     logger().addLogEntry("Hammer tip reference bezier velocity [m/s]", this, [&, this]()
     {return hammer_tip_reference_velocity_vector;});
-    
+
+    logger().addLogEntry("Hammer tip position [m]", this, [&, this]()
+    {return hammer_tip_actual_position_vector;});
+      
+    logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
+    {return hammer_tip_reference_position_vector;});
+
     logger().addLogEntry("Projected momentum of hammer tip [kgm/s]", this, [&, this]()
     {return projected_momentum_of_hammer_tip;});
 
