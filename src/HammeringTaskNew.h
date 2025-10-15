@@ -29,7 +29,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
-
+    const double compute_effective_mass_with_mbc();
 
     bool impact_detected = false;
     // ROS
