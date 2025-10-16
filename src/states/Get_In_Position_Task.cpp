@@ -39,8 +39,9 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   
   // The target is the translation of the nail
   _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
-  _target = sva::PTransformd(_end_point);
-  
+  // _target = sva::PTransformd(_end_point);
+  _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
+
   // The curve has at least 2 control points : the first one being the initial translation of the frame and the second 
   // being the target, thus the curve is at least of degree 1
   // Curve constraints add 4 control points and we already have the starting point and the final point.
@@ -66,10 +67,13 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(3) = _magic_BSpline_task_dimweight_x;
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
-  _BSplineVel->dimWeight(dimweights);
-  // ctl.solver().addTask(_BSplineVel);
+  // _BSplineVel->dimWeight(dimweights);
+  ctl.solver().addTask(_BSplineVel);
 
   mc_rtc::log::info("Degree of BSpline : {}", _BSplineVel->spline().get_bezier()->degree());
+
+  ctl.getPostureTask(ctl.robot().name())->stiffness(_magic_posture_task_stiffness);
+  ctl.getPostureTask(ctl.robot().name())->weight(_magic_posture_task_weight);
 
   // gripper_task->target(sva::PTransformd(sva::RotY(M_PI)) * sva::PTransformd(sva::RotZ(M_PI/2)) * sva::PTransformd(Eigen::Vector3d(0 ,0, 0.025)) * ctl.robot("box").frame("Right").position());
 
@@ -77,7 +81,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // Test transform task
   gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_stiffness, _gripper_task_weight);
-  ctl.solver().addTask(gripper_task);
+  // ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
 
@@ -144,19 +148,19 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
                         abs(ctl.nail_force_vector.y()) >= ctl.magic_force_threshold || 
                         abs(ctl.nail_force_vector.z()) >= ctl.magic_force_threshold;
 
-  // if(ctl.impact_detected)
-  // {
-  //   Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
+  if(ctl.impact_detected)
+  {
+    Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
     
-  //   mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
+    mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
 
-  //   mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
-  //   mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
-  //   mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
+    mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
+    mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
+    mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
 
-  //   output("STOP");
-  //   return true;
-  // }
+    output("STOP");
+    return true;
+  }
 
   if(stop){
     mc_rtc::log::info("Stop button clicked");
@@ -176,7 +180,8 @@ void Get_In_Position_Task::teardown(mc_control::fsm::Controller & ctl_)
   ctl.solver().removeTask(_BSplineVel);
   ctl.solver().removeTask(_vectorOrientationTask);
   // ctl.getPostureTask(ctl.main_robot_name)->refAccel(0*_gradient_of_m);
-  ctl.solver().removeTask(ctl.getPostureTask(ctl.main_robot_name));
+  // ctl.solver().removeTask(ctl.getPostureTask(ctl.main_robot_name));
+  ctl.getPostureTask(ctl.robot().name())->refAccel(0 * _gradient_of_m);
   mc_rtc::log::info("Tasks cleared successfully");
 }
 
@@ -1023,6 +1028,8 @@ void Get_In_Position_Task::load_params()
 {
   std::string magic_values_key = "magic_values";
   _magic_posture_task_weight = _config(magic_values_key)("magic_posture_task_weight");
+  _magic_posture_task_stiffness = _config(magic_values_key)("magic_posture_task_stiffness");
+
   _magic_effective_mass_maximization_task_weight = _config(magic_values_key)("magic_effective_mass_maximization_task_weight");
   _magic_vector_orientation_task_weight = _config(magic_values_key)("magic_vector_orientation_task_weight");
   _magic_vector_orientation_task_stiffness = _config(magic_values_key)("magic_vector_orientation_task_stiffness");

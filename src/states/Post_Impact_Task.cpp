@@ -21,7 +21,10 @@ void Post_Impact_Task::start(mc_control::fsm::Controller & ctl_)
     _postureTask->posture(ctl.base_posture_vector);
     _postureTask->stiffness(_magic_posture_task_stiffness);
     _postureTask->weight(_magic_posture_task_weight);
-    ctl.solver().addTask(_postureTask);
+    ctl.getPostureTask(ctl.robot().name())->stiffness(_magic_posture_task_stiffness);
+    ctl.getPostureTask(ctl.robot().name())->weight(_magic_posture_task_weight);
+
+    // ctl.solver().addTask(_postureTask);
 }
 
 bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
@@ -29,7 +32,7 @@ bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
     auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
 
     // Find a better condition than that
-    if(_postureTask->eval().norm() < _magic_posture_task_epsilon && _postureTask->speed().norm() < 0.03){
+    if(_postureTask->speed().norm() < 0.03){
         output("STOP");
         return true;
     }

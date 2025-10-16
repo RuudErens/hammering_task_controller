@@ -94,6 +94,7 @@ states:
       magic_BSpline_task_dimweight_z: 1
 
       magic_posture_task_weight: 1
+      magic_posture_task_stiffness: 5
 
       #Set to 0 to disable EMMT
       magic_effective_mass_maximization_task_weight: 100

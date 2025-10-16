@@ -131,6 +131,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     //W_p, c.f. article or internship report
     double _magic_posture_task_weight = 1.0f;
+    double _magic_posture_task_stiffness = 1.0f;
 
     //W_m, c.f. article or internship report
     double _magic_effective_mass_maximization_task_weight = 1.0f;
