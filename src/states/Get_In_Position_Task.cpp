@@ -28,10 +28,11 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // Thus _posWp is empty
   _posWp = {};
   
-  _constr.end_vel.x() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.x();
-  _constr.end_vel.y() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.y();
-  _constr.end_vel.z() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.z();
-
+  // _constr.end_vel.x() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.x();
+  // _constr.end_vel.y() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.y();
+  // _constr.end_vel.z() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.z();
+  _constr.end_vel = ctl.nail_rot.transpose()*_magic_normal_final_velocity;
+  
   // No need for orientation waypoints so _oriWp is empty
   _oriWp = {};
   
@@ -61,9 +62,9 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
     dimweights(2) = 0;
   }
   // Increase the weights on the x and y coordinates
-  dimweights(3) = _magic_vector_orientation_task_dimweight_x;
-  dimweights(4) = _magic_vector_orientation_task_dimweight_y;
-  dimweights(5) = _magic_vector_orientation_task_dimweight_z;
+  dimweights(3) = _magic_BSpline_task_dimweight_x;
+  dimweights(4) = _magic_BSpline_task_dimweight_y;
+  dimweights(5) = _magic_BSpline_task_dimweight_z;
   _BSplineVel->dimWeight(dimweights);
   ctl.solver().addTask(_BSplineVel);
 
@@ -98,12 +99,16 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   // }
 
   // Compute some values and update the logs
-  ctl.effective_mass = compute_effective_mass_with_mbc(_new_mbc,
-                                                  ctl, 
-                                                  ctl.nail_normal_vector_world_frame);
+  // ctl.effective_mass = compute_effective_mass_with_mbc(_new_mbc,
+  //                                                 ctl, 
+  //                                                 ctl.nail_normal_vector_world_frame);
+  ctl.effective_mass = ctl.compute_effective_mass_with_mbc();
   ctl.hammer_tip_actual_velocity_vector = ctl.robot().frame(ctl.hammer_head_frame_name).velocity().linear();
+  ctl.hammer_tip_actual_position_vector = ctl.robot().frame(ctl.hammer_head_frame_name).position().translation();
   ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel, 
                                                                   ctl);
+  ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
+  ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
   ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass, 
                                                                     ctl.hammer_tip_actual_velocity_vector, 
                                                                     ctl.nail_normal_vector_world_frame);
@@ -136,6 +141,12 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
     mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
 
+    output("STOP");
+    return true;
+  }
+
+  if(stop){
+    mc_rtc::log::info("Stop button clicked");
     output("STOP");
     return true;
   }
@@ -181,7 +192,7 @@ const double Get_In_Position_Task::compute_projected_momentum(
   return effective_mass* (velocity_vector.x()*normal_vector.x()
                           + velocity_vector.y()*normal_vector.y()
                           + velocity_vector.z()*normal_vector.z());
-}                                                          
+}  // TODO: should this not use the 2-norm?
 
 
 const double Get_In_Position_Task::compute_effective_mass_with_mbc(
@@ -205,17 +216,10 @@ const double Get_In_Position_Task::compute_effective_mass_with_mbc(
   rbd::ForwardDynamics fd(robot_mb);
   fd.computeH(robot_mb, mbc);
   Eigen::MatrixXd M = fd.H();
-  // const Eigen::MatrixXd M = _dynamicsConstraint->motionConstr().fd().H();
-  // mc_rtc::log::info("M = {}", M);
 
   const Eigen::MatrixXd linear_jacobian = full_world_frame_jacobian.bottomRows(3);
-  // writeEigenMatrixToCSV(linear_jacobian, "linear_jac.csv");
-  // mc_rtc::log::info("Dim of M = {} x {}", M.cols(), M.rows());
-  // mc_rtc::log::info("M = {}", M);
 
   const Eigen::Matrix3d LAMBDA = linear_jacobian*M.inverse()*linear_jacobian.transpose();
-
-  // mc_rtc::log::info("Dim of  LINEAR LAMBDA = {} x {}", LINEAR_LAMBDA.cols(), LINEAR_LAMBDA.rows());
 
   return 1/(normal_vector.transpose()*LAMBDA*normal_vector);
 
@@ -1009,9 +1013,9 @@ void Get_In_Position_Task::load_params()
   _magic_vector_orientation_task_weight = _config(magic_values_key)("magic_vector_orientation_task_weight");
   _magic_vector_orientation_task_stiffness = _config(magic_values_key)("magic_vector_orientation_task_stiffness");
 
-  _magic_vector_orientation_task_dimweight_x = _config(magic_values_key)("magic_vector_orientation_task_dimweight_x");
-  _magic_vector_orientation_task_dimweight_y = _config(magic_values_key)("magic_vector_orientation_task_dimweight_y");
-  _magic_vector_orientation_task_dimweight_z = _config(magic_values_key)("magic_vector_orientation_task_dimweight_z");
+  _magic_BSpline_task_dimweight_x = _config(magic_values_key)("magic_BSpline_task_dimweight_x");
+  _magic_BSpline_task_dimweight_y = _config(magic_values_key)("magic_BSpline_task_dimweight_y");
+  _magic_BSpline_task_dimweight_z = _config(magic_values_key)("magic_BSpline_task_dimweight_z");
   _magic_BSpline_max_duration = _config(magic_values_key)("magic_BSpline_max_duration");
   _magic_BSpline_task_stiffness = _config(magic_values_key)("magic_BSpline_task_stiffness");
   _magic_BSpline_task_weight = _config(magic_values_key)("magic_BSpline_task_weight");

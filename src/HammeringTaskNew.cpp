@@ -1,13 +1,17 @@
 #include "HammeringTaskNew.h"
+#include <RBDyn/MultiBodyConfig.h>
+
 
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config)
+: mc_control::fsm::Controller(rm, dt, config, Backend::Tasks) //
 {
 
   config_.load(config);
   datastore().make<std::string>("ControlMode", "Torque");
   datastore().make<std::string>("Coriolis", "Yes"); 
   load_parameters();
+
+  effective_mass = compute_effective_mass_with_mbc();
   add_logs();
   nh = mc_rtc::ROSBridge::get_node_handle();
   // Not the cleanest but at leat mc_mujoco does not crash
@@ -39,6 +43,34 @@ bool HammeringTaskNew::run()
 void HammeringTaskNew::reset(const mc_control::ControllerResetData & reset_data)
 {
   mc_control::fsm::Controller::reset(reset_data);
+}
+
+const double HammeringTaskNew::compute_effective_mass_with_mbc(){
+    
+  // If you dont put this line the gradient is 0 everywhere because M and J are not updating
+  rbd::MultiBodyConfig mbc = robot().mbc();
+  robot().forwardKinematics(robot().mbc());                                                                                                    
+
+  //  Access Full Jacobian of the robot
+  rbd::MultiBody robot_mb = robot().mb();
+  rbd::Jacobian jac(robot_mb, hammer_head_frame_name);
+  Eigen::MatrixXd world_frame_jacobian = jac.jacobian(robot_mb, mbc);
+  Eigen::MatrixXd full_world_frame_jacobian(6, robot().mb().nrDof());
+  jac.fullJacobian(robot_mb, world_frame_jacobian, full_world_frame_jacobian);
+
+  // Access linear part of the Jacobian
+  const Eigen::MatrixXd linear_jacobian = full_world_frame_jacobian.bottomRows(3);
+
+  // Access Mass matrix
+  rbd::ForwardDynamics fd(robot_mb);
+  fd.computeH(robot_mb, mbc);
+  Eigen::MatrixXd M = fd.H();
+
+  // Compute Lambda
+  const Eigen::Matrix3d LAMBDA = linear_jacobian*M.inverse()*linear_jacobian.transpose();
+
+  return 1/(nail_normal_vector_world_frame.transpose()*LAMBDA*nail_normal_vector_world_frame);
+
 }
 
 
@@ -100,11 +132,21 @@ void HammeringTaskNew::add_logs()
       
     logger().addLogEntry("Hammer tip reference bezier velocity [m/s]", this, [&, this]()
     {return hammer_tip_reference_velocity_vector;});
-    
+
+    logger().addLogEntry("Hammer tip position [m]", this, [&, this]()
+    {return hammer_tip_actual_position_vector;});
+      
+    logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
+    {return hammer_tip_reference_position_vector;});
+
     logger().addLogEntry("Projected momentum of hammer tip [kgm/s]", this, [&, this]()
     {return projected_momentum_of_hammer_tip;});
 
     logger().addLogEntry("Vector orientation error", this, [&, this]()
     {return vector_orientation_error;});
+
+
+    // logger().addLogEntry("Normal force applied to the nail", this, [&, this]()
+    // {return vector_orientation_error;});
 }
 

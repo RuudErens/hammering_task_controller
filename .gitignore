@@ -1,3 +1,5 @@
 build/
 **.csv
 .cache/
+compile_commands.json
+build

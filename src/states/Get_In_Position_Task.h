@@ -122,7 +122,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_BSpline_task_weight = 1.0f;
 
     //V^w_f,in, c.f. article    
-    double _magic_normal_final_velocity = 1.0f;
+    Eigen::Vector3d _magic_normal_final_velocity = {0, 0, 0};
 
     //W_p, c.f. article or internship report
     double _magic_posture_task_weight = 1.0f;
@@ -131,9 +131,9 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_effective_mass_maximization_task_weight = 1.0f;
 
 
-    double _magic_vector_orientation_task_dimweight_x = 1.0f;
-    double _magic_vector_orientation_task_dimweight_y = 1.0f;
-    double _magic_vector_orientation_task_dimweight_z = 1.0f;
+    double _magic_BSpline_task_dimweight_x = 1.0f;
+    double _magic_BSpline_task_dimweight_y = 1.0f;
+    double _magic_BSpline_task_dimweight_z = 1.0f;
     double _magic_vector_orientation_task_weight = 1.0f;
     double _magic_vector_orientation_task_stiffness = 1.0f;
 
