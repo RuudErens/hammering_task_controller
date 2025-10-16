@@ -3,7 +3,7 @@
 
 
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config, Backend::TVM) //
+: mc_control::fsm::Controller(rm, dt, config, Backend::Tasks) //
 {
 
   config_.load(config);
