@@ -103,6 +103,9 @@ states:
 
       magic_vector_orientation_task_stiffness: 250
 
+      gripper_task_stiffness: 100
+      gripper_task_weight: 500000
+
     curve_constraints:
       # Normal velocity of the hammer tip at the nail
       magic_normal_final_velocity: [0, 0, -2]
@@ -136,7 +139,7 @@ states:
       #No real meaning behind these values
       magic_posture_task_weight: 100
       magic_posture_task_stiffness: 100
-      magic_posture_task_epsilon: 1.03
+      magic_posture_task_epsilon: 0.15
 
   # ------------------------ not directly used states ----------------------
   CoM:
@@ -201,6 +204,7 @@ states:
     transitions:
       - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
       - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
+      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
 
 
 # Transitions map

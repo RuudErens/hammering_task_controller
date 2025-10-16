@@ -26,6 +26,7 @@
 #include <RBDyn/Jacobian.h>
 #include <vector>
 
+#include <mc_tasks/TransformTask.h>
 #include <mc_tasks/VectorOrientationTask.h>
 typedef Eigen::Vector3d Point;
 typedef Point point_t;
@@ -56,6 +57,10 @@ struct Get_In_Position_Task : mc_control::fsm::State
     // Nail target
     sva::PTransformd _target;
     Eigen::Vector3d _end_point;
+
+    // Transform task to test tvm
+    std::shared_ptr<mc_tasks::TransformTask> gripper_task;
+
 
     bool stop = false;
     
@@ -137,7 +142,8 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_vector_orientation_task_weight = 1.0f;
     double _magic_vector_orientation_task_stiffness = 1.0f;
 
-
+    double _gripper_task_stiffness = 1.0f;
+    double _gripper_task_weight = 1.0f;
 
     bool _enable_BSpline_orientation = false;
 

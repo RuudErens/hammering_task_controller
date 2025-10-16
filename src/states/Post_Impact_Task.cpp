@@ -29,6 +29,10 @@ bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
     auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
 
     // Find a better condition than that
+    if(_postureTask->eval().norm() < _magic_posture_task_epsilon && _postureTask->speed().norm() < 0.03){
+        output("STOP");
+        return true;
+    }
     // return _postureTask->eval().norm() < _magic_posture_task_epsilon && _postureTask->speed().norm() < 0.0003;
     return false;
 }
@@ -36,7 +40,7 @@ bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
 void Post_Impact_Task::teardown(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
-    ctl.solver().removeTask(_postureTask);
+    // ctl.solver().removeTask(_postureTask);
 }
 
 void Post_Impact_Task::load_parameters()
