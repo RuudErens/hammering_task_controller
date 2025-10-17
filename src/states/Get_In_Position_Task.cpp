@@ -40,7 +40,8 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // The target is the translation of the nail
   _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
   // _target = sva::PTransformd(_end_point);
-  _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
+  // _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
+  _target = sva::PTransformd(sva::RotX(M_PI)) * sva::PTransformd(sva::RotY(M_PI/2)) * sva::PTransformd(ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation()) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
 
   // The curve has at least 2 control points : the first one being the initial translation of the frame and the second 
   // being the target, thus the curve is at least of degree 1
@@ -67,7 +68,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(3) = _magic_BSpline_task_dimweight_x;
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
-  // _BSplineVel->dimWeight(dimweights);
+  _BSplineVel->dimWeight(dimweights);
   ctl.solver().addTask(_BSplineVel);
 
   mc_rtc::log::info("Degree of BSpline : {}", _BSplineVel->spline().get_bezier()->degree());
@@ -94,7 +95,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   _vectorOrientationTask->targetVector(-ctl.nail_normal_vector_world_frame);
   _vectorOrientationTask->weight(_magic_vector_orientation_task_weight);
   _vectorOrientationTask->stiffness(_magic_vector_orientation_task_stiffness);
-  // ctl.solver().addTask(_vectorOrientationTask);
+  ctl.solver().addTask(_vectorOrientationTask);
 
   mc_rtc::log::info("Mass of the nail = {} kg", ctl.robot(ctl.nail_robot_name).mass());
   mc_rtc::log::info("solver timestep = {} s", ctl.solver().dt());

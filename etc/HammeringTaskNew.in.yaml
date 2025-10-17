@@ -27,7 +27,7 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [0, 0, 1.57]
+      rotation: [-0.5, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
 
 
 
