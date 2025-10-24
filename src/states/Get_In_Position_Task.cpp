@@ -3,6 +3,7 @@
 #include "../HammeringTaskNew.h"
 #include <Eigen/src/Core/Matrix.h>
 #include <Eigen/src/Geometry/Quaternion.h>
+#include <cmath>
 #include <mc_rtc/logging.h>
 
 
@@ -87,7 +88,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   auto gripper_target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) * sva::PTransformd(_end_point);//sva::PTransformd(Eigen::Vector3d(0.7, 0.5, 1)) * 
 
   // Test transform task
-  gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_stiffness, _gripper_task_weight);
+  gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_min_stiffness, _gripper_task_weight);
   ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
@@ -124,6 +125,28 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
 bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
 {
+  // Stagger the buildup of the task stiffness for the transform task to not get a failing QP on startup of state
+  double error = gripper_task->eval().norm();
+  double k_p = _gripper_task_min_stiffness;
+  if(first_iteration){
+    first_instance_error = error;
+    first_iteration = false;
+  }
+// This function uses a scaled and shifted Hyperbolic Tangent (tanh) function to provide a
+// non-linear, smooth, and bounded stiffness gain. The stiffness increases smoothly as the
+// error approaches the goal, preventing abrupt, unstable jumps in control effort near
+// the target while ensuring the stiffness is capped at K_max.
+// 
+// The core relationship is designed such that:
+// - As error -> first_instance_error (large), k_p -> min_stiffness (K_min).
+// - As error -> goal_error (small), k_p -> max_stiffness (K_max).    
+  k_p = _gripper_task_min_stiffness + (_gripper_task_max_stiffness-_gripper_task_min_stiffness) * (
+    (tanh((_gripper_task_goal_error - error)/_gripper_task_K_scaling_factor) - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)) / 
+    (1 - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)));  
+
+  //  mc_rtc::log::info("Current error is {} thus the stiffness is {}", error, k_p);
+  gripper_task->stiffness(k_p);
+
   HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
   _new_mbc = ctl.robot().mbc();
   // if(_first_iteration)
@@ -1070,8 +1093,12 @@ void Get_In_Position_Task::load_params()
   _magic_BSpline_task_stiffness = _config(magic_values_key)("magic_BSpline_task_stiffness");
   _magic_BSpline_task_weight = _config(magic_values_key)("magic_BSpline_task_weight");
 
-  _gripper_task_stiffness = _config(magic_values_key)("gripper_task_stiffness");
   _gripper_task_weight = _config(magic_values_key)("gripper_task_weight");
+  _gripper_task_min_stiffness = _config(magic_values_key)("gripper_task_min_stiffness");
+  _gripper_task_max_stiffness = _config(magic_values_key)("gripper_task_max_stiffness");
+  _gripper_task_goal_error = _config(magic_values_key)("gripper_task_goal_error");
+  _gripper_task_K_scaling_factor = _config(magic_values_key)("gripper_task_s");
+
   // ------------------------ Loading init and start velocities, accelerations and jerks ---------------------------
 
 

@@ -143,8 +143,11 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_vector_orientation_task_weight = 1.0f;
     double _magic_vector_orientation_task_stiffness = 1.0f;
 
-    double _gripper_task_stiffness = 1.0f;
     double _gripper_task_weight = 1.0f;
+    double _gripper_task_min_stiffness = 1.0f;
+    double _gripper_task_max_stiffness = 1.0f;
+    double _gripper_task_goal_error = 1.0f;
+    double _gripper_task_K_scaling_factor = 1.0f;
 
     bool _enable_BSpline_orientation = false;
 
@@ -319,5 +322,9 @@ struct Get_In_Position_Task : mc_control::fsm::State
     
     // Debug iterator
     int iii = 0;
+
+    // variables for stiffness staggering
+    bool first_iteration = true;
+    double first_instance_error;  
 
 };

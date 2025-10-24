@@ -104,7 +104,10 @@ states:
 
       magic_vector_orientation_task_stiffness: 100
 
-      gripper_task_stiffness: 200
+      gripper_task_min_stiffness: 10
+      gripper_task_max_stiffness: 20000
+      gripper_task_goal_error: 0.0001
+      gripper_task_s: 0.5
       gripper_task_weight: 10000
 
     curve_constraints:
