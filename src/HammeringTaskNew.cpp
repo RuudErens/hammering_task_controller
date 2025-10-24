@@ -1,5 +1,6 @@
 #include "HammeringTaskNew.h"
 #include <RBDyn/MultiBodyConfig.h>
+// #include <mc_solver/DynamicsConstraint.h>
 
 
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
@@ -30,6 +31,15 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
   // Store the initial posture of the robot
   std::shared_ptr<mc_tasks::PostureTask> FSMPostureTask = getPostureTask(robot().name());
   base_posture_vector = FSMPostureTask->posture();
+
+
+    // dynamicsConstraint = mc_rtc::unique_ptr<mc_solver::DynamicsConstraint>(
+    //   new mc_solver::DynamicsConstraint(
+    //       robots(), 0, {0.1, 0.01, xsiOff_, m_, lambda_}, 0.9, true));
+  // const std::array<double, 3> damping = {0.55, 0.30, 0.9};
+  dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), damping, 0.9, false);
+  solver().addConstraintSet(dynamicsConstraint);
+
 
   mc_rtc::log::success("HammeringTaskNew init done ");
 }
@@ -145,6 +155,8 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Vector orientation error", this, [&, this]()
     {return vector_orientation_error;});
 
+    logger().addLogEntry("Nail force sensor", this, [&, this]()
+    {return nail_force_vector;});
 
     // logger().addLogEntry("Normal force applied to the nail", this, [&, this]()
     // {return vector_orientation_error;});

@@ -4,6 +4,7 @@
 #include <mc_control/fsm/Controller.h>
 
 // BSplineTrajectoryTask and curve constraints
+#include <mc_solver/DynamicsConstraint.h>
 #include <mc_tasks/PostureTask.h>
 #include <ndcurves/curve_constraint.h>
 
@@ -55,6 +56,9 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     double vector_orientation_error = 0.0f;
 
     std::vector<std::vector<double>> base_posture_vector;
+
+    const std::array<double, 3> damping = {0.1, 0.01, 0.5};
+    std::unique_ptr<mc_solver::DynamicsConstraint> dynamicsConstraint;
 
 
     // ------------------------------ Parameters ---------------------------------------------  

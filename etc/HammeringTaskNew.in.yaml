@@ -27,15 +27,15 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [-0.5, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
+      rotation: [0, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
 
 
 
 # General constraints, always on
 constraints:
 - type: contact
-- type: dynamics
-  damper: [0.1, 0.01, 0.5]
+# - type: dynamics
+#   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 
 # Collision constraint
@@ -85,31 +85,31 @@ states:
       #No real meaning behind these values
 
       #Set to 0 to disable BSplineTask
-      magic_BSpline_task_weight: 1
+      magic_BSpline_task_weight: 0
       
       magic_BSpline_max_duration: 1 #seconds
-      magic_BSpline_task_stiffness: 100000
-      magic_BSpline_task_dimweight_x: 10000
-      magic_BSpline_task_dimweight_y: 10000
+      magic_BSpline_task_stiffness: 10000
+      magic_BSpline_task_dimweight_x: 1
+      magic_BSpline_task_dimweight_y: 1
       magic_BSpline_task_dimweight_z: 1
 
       magic_posture_task_weight: 1
-      magic_posture_task_stiffness: 5
+      magic_posture_task_stiffness: 1
 
       #Set to 0 to disable EMMT
-      magic_effective_mass_maximization_task_weight: 100
+      magic_effective_mass_maximization_task_weight: 0
 
       #Set to 0 to disable VectorOrientationTask
-      magic_vector_orientation_task_weight: 10
+      magic_vector_orientation_task_weight: 0
 
-      magic_vector_orientation_task_stiffness: 250
+      magic_vector_orientation_task_stiffness: 100
 
-      gripper_task_stiffness: 100
-      gripper_task_weight: 500000
+      gripper_task_stiffness: 200
+      gripper_task_weight: 10000
 
     curve_constraints:
       # Normal velocity of the hammer tip at the nail
-      magic_normal_final_velocity: [0, 0, -2]
+      magic_normal_final_velocity: [0, 0, -1]
       
       linear_velocity:
         x:

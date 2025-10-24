@@ -1,7 +1,9 @@
 #include "Get_In_Position_Task.h"
 
 #include "../HammeringTaskNew.h"
+#include <Eigen/src/Core/Matrix.h>
 #include <Eigen/src/Geometry/Quaternion.h>
+#include <mc_rtc/logging.h>
 
 
 
@@ -39,6 +41,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   
   // The target is the translation of the nail
   _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
+  _end_point[2] += 0.02;
   // _target = sva::PTransformd(_end_point);
   // _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
   _target = sva::PTransformd(sva::RotX(M_PI)) * sva::PTransformd(sva::RotY(M_PI/2)) * sva::PTransformd(ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation()) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
@@ -47,6 +50,9 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // being the target, thus the curve is at least of degree 1
   // Curve constraints add 4 control points and we already have the starting point and the final point.
   // Thus, the degree of the BSpline is 5 (the degree is N-1 points).
+
+  mc_rtc::log::info("Adding BSpline task with weight {}", _magic_BSpline_task_weight);
+
   _BSplineVel = std::make_shared<mc_tasks::BSplineTrajectoryTask>(ctl.robot().frame(ctl.hammer_head_frame_name),
                                                                   _magic_BSpline_max_duration,
                                                                   _magic_BSpline_task_stiffness, 
@@ -69,7 +75,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
   _BSplineVel->dimWeight(dimweights);
-  ctl.solver().addTask(_BSplineVel);
+  // ctl.solver().addTask(_BSplineVel);
 
   mc_rtc::log::info("Degree of BSpline : {}", _BSplineVel->spline().get_bezier()->degree());
 
@@ -78,13 +84,26 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // gripper_task->target(sva::PTransformd(sva::RotY(M_PI)) * sva::PTransformd(sva::RotZ(M_PI/2)) * sva::PTransformd(Eigen::Vector3d(0 ,0, 0.025)) * ctl.robot("box").frame("Right").position());
 
-  auto gripper_target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) * sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));//sva::PTransformd(Eigen::Vector3d(0.7, 0.5, 1)) * 
+  auto gripper_target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) * sva::PTransformd(_end_point);//sva::PTransformd(Eigen::Vector3d(0.7, 0.5, 1)) * 
 
   // Test transform task
   gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_stiffness, _gripper_task_weight);
-  // ctl.solver().addTask(gripper_task);
+  ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
+  Eigen::Vector6d dimweights_grip = gripper_task->dimWeight();
+  // Remove the orientation part of the BSpline by setting the orientation weights to 0
+  if(!_enable_BSpline_orientation)
+  {
+    dimweights_grip(0) = 1;
+    dimweights_grip(1) = 1;
+    dimweights_grip(2) = 1;
+  }
+  // Increase the weights on the x and y coordinates
+  dimweights_grip(3) = _magic_BSpline_task_dimweight_x;
+  dimweights_grip(4) = _magic_BSpline_task_dimweight_y;
+  dimweights_grip(5) = _magic_BSpline_task_dimweight_z;
+  gripper_task->dimWeight(dimweights_grip);
 
 
   // ------------------------- VectorOrientationTask ----------------------------
@@ -95,7 +114,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   _vectorOrientationTask->targetVector(-ctl.nail_normal_vector_world_frame);
   _vectorOrientationTask->weight(_magic_vector_orientation_task_weight);
   _vectorOrientationTask->stiffness(_magic_vector_orientation_task_stiffness);
-  ctl.solver().addTask(_vectorOrientationTask);
+  // ctl.solver().addTask(_vectorOrientationTask);
 
   mc_rtc::log::info("Mass of the nail = {} kg", ctl.robot(ctl.nail_robot_name).mass());
   mc_rtc::log::info("solver timestep = {} s", ctl.solver().dt());
@@ -149,19 +168,28 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
                         abs(ctl.nail_force_vector.y()) >= ctl.magic_force_threshold || 
                         abs(ctl.nail_force_vector.z()) >= ctl.magic_force_threshold;
 
-  if(ctl.impact_detected)
-  {
-    Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
-    
-    mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
 
-    mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
-    mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
-    mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
-
-    output("STOP");
-    return true;
+  if(iii > 99){
+    auto error = gripper_task->eval();
+    mc_rtc::log::info("Gripper task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
+    iii = 0;
   }
+  iii++;
+
+
+  // if(ctl.impact_detected)
+  // {
+  //   Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
+    
+  //   mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
+
+  //   mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
+  //   mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
+  //   mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
+
+  //   output("STOP");
+  //   return true;
+  // }
 
   if(stop){
     mc_rtc::log::info("Stop button clicked");

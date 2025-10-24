@@ -315,6 +315,9 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _old_floating_base_effective_mass_mbc = 1;
     double _old_reduced_effective_mass_mbc = 1;
     std::vector<double> _ratios;
-    double _old_effective_mass_encoders = 1;    
+    double _old_effective_mass_encoders = 1;   
+    
+    // Debug iterator
+    int iii = 0;
 
 };
