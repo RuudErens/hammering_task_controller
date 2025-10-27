@@ -31,6 +31,8 @@ bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
 
+    // log_values(ctl_);
+
     // Find a better condition than that
     if(_postureTask->speed().norm() < 0.03){
         output("STOP");
@@ -54,6 +56,23 @@ void Post_Impact_Task::load_parameters()
     _magic_posture_task_stiffness = _config(magic_values_key)("magic_posture_task_stiffness");
     _magic_posture_task_epsilon = _config(magic_values_key)("magic_posture_task_epsilon");
 
+}
+
+void Post_Impact_Task::log_values(mc_control::fsm::Controller & ctl_)
+{
+    auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
+
+    ctl.effective_mass = ctl.compute_effective_mass_with_mbc();
+    ctl.hammer_tip_actual_velocity_vector = ctl.robot().frame(ctl.hammer_head_frame_name).velocity().linear();
+    ctl.hammer_tip_actual_position_vector = ctl.robot().frame(ctl.hammer_head_frame_name).position().translation();
+    ctl.hammer_tip_reference_velocity_vector = {0, 0, 0};
+    ctl.hammer_tip_reference_position_vector = {0, 0, 0};
+    // ctl.hammer_tip_reference_position_vector = gripper_task->target().translation();
+    ctl.projected_momentum_of_hammer_tip = 0;
+    ctl.bspline_tracking_error = {0, 0, 0};
+
+    Eigen::Matrix3d current_hammer_rotation = ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation();
+    ctl.vector_orientation_error = 0;
 }
 
 const std::vector<std::vector<double>> Post_Impact_Task::getHalfSittingPositionVector() const

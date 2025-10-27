@@ -151,7 +151,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     bool _enable_BSpline_orientation = false;
 
-
+    int _logging_freq = 1;
 
 
 

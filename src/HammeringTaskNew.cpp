@@ -149,6 +149,9 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
     {return hammer_tip_reference_position_vector;});
 
+    logger().addLogEntry("Bspline tracking error [m]", this, [&, this]()
+    {return bspline_tracking_error;});
+
     logger().addLogEntry("Projected momentum of hammer tip [kgm/s]", this, [&, this]()
     {return projected_momentum_of_hammer_tip;});
 

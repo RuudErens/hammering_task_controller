@@ -85,7 +85,7 @@ states:
       #No real meaning behind these values
 
       #Set to 0 to disable BSplineTask
-      magic_BSpline_task_weight: 0
+      magic_BSpline_task_weight: 1
       
       magic_BSpline_max_duration: 1 #seconds
       magic_BSpline_task_stiffness: 10000
@@ -100,9 +100,12 @@ states:
       magic_effective_mass_maximization_task_weight: 0
 
       #Set to 0 to disable VectorOrientationTask
-      magic_vector_orientation_task_weight: 0
+      magic_vector_orientation_task_weight: 10
 
       magic_vector_orientation_task_stiffness: 100
+
+      # Number of timesteps between every logging instance
+      logging_freq: 50
 
       gripper_task_min_stiffness: 10
       gripper_task_max_stiffness: 20000

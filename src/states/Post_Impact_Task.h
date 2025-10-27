@@ -13,6 +13,8 @@ struct Post_Impact_Task : mc_control::fsm::State
 
   bool run(mc_control::fsm::Controller & ctl_) override;
 
+  void log_values(mc_control::fsm::Controller & ctl_);
+
   void teardown(mc_control::fsm::Controller & ctl_) override;
 
   private:

@@ -42,7 +42,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   
   // The target is the translation of the nail
   _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
-  _end_point[2] += 0.02;
+  // _end_point[2] += 0.02;
   // _target = sva::PTransformd(_end_point);
   // _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
   _target = sva::PTransformd(sva::RotX(M_PI)) * sva::PTransformd(sva::RotY(M_PI/2)) * sva::PTransformd(ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation()) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
@@ -76,7 +76,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
   _BSplineVel->dimWeight(dimweights);
-  // ctl.solver().addTask(_BSplineVel);
+  ctl.solver().addTask(_BSplineVel);
 
   mc_rtc::log::info("Degree of BSpline : {}", _BSplineVel->spline().get_bezier()->degree());
 
@@ -89,7 +89,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // Test transform task
   gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_min_stiffness, _gripper_task_weight);
-  ctl.solver().addTask(gripper_task);
+  // ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
   Eigen::Vector6d dimweights_grip = gripper_task->dimWeight();
@@ -115,7 +115,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   _vectorOrientationTask->targetVector(-ctl.nail_normal_vector_world_frame);
   _vectorOrientationTask->weight(_magic_vector_orientation_task_weight);
   _vectorOrientationTask->stiffness(_magic_vector_orientation_task_stiffness);
-  // ctl.solver().addTask(_vectorOrientationTask);
+  ctl.solver().addTask(_vectorOrientationTask);
 
   mc_rtc::log::info("Mass of the nail = {} kg", ctl.robot(ctl.nail_robot_name).mass());
   mc_rtc::log::info("solver timestep = {} s", ctl.solver().dt());
@@ -125,27 +125,27 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
 bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
 {
-  // Stagger the buildup of the task stiffness for the transform task to not get a failing QP on startup of state
-  double error = gripper_task->eval().norm();
-  double k_p = _gripper_task_min_stiffness;
-  if(first_iteration){
-    first_instance_error = error;
-    first_iteration = false;
-  }
-// This function uses a scaled and shifted Hyperbolic Tangent (tanh) function to provide a
-// non-linear, smooth, and bounded stiffness gain. The stiffness increases smoothly as the
-// error approaches the goal, preventing abrupt, unstable jumps in control effort near
-// the target while ensuring the stiffness is capped at K_max.
-// 
-// The core relationship is designed such that:
-// - As error -> first_instance_error (large), k_p -> min_stiffness (K_min).
-// - As error -> goal_error (small), k_p -> max_stiffness (K_max).    
-  k_p = _gripper_task_min_stiffness + (_gripper_task_max_stiffness-_gripper_task_min_stiffness) * (
-    (tanh((_gripper_task_goal_error - error)/_gripper_task_K_scaling_factor) - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)) / 
-    (1 - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)));  
+//   // Stagger the buildup of the task stiffness for the transform task to not get a failing QP on startup of state
+//   double error = gripper_task->eval().norm();
+//   double k_p = _gripper_task_min_stiffness;
+//   if(first_iteration){
+//     first_instance_error = error;
+//     first_iteration = false;
+//   }
+// // This function uses a scaled and shifted Hyperbolic Tangent (tanh) function to provide a
+// // non-linear, smooth, and bounded stiffness gain. The stiffness increases smoothly as the
+// // error approaches the goal, preventing abrupt, unstable jumps in control effort near
+// // the target while ensuring the stiffness is capped at K_max.
+// // 
+// // The core relationship is designed such that:
+// // - As error -> first_instance_error (large), k_p -> min_stiffness (K_min).
+// // - As error -> goal_error (small), k_p -> max_stiffness (K_max).    
+//   k_p = _gripper_task_min_stiffness + (_gripper_task_max_stiffness-_gripper_task_min_stiffness) * (
+//     (tanh((_gripper_task_goal_error - error)/_gripper_task_K_scaling_factor) - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)) / 
+//     (1 - tanh((_gripper_task_goal_error - first_instance_error)/_gripper_task_K_scaling_factor)));  
 
-  //  mc_rtc::log::info("Current error is {} thus the stiffness is {}", error, k_p);
-  gripper_task->stiffness(k_p);
+//   //  mc_rtc::log::info("Current error is {} thus the stiffness is {}", error, k_p);
+//   gripper_task->stiffness(k_p);
 
   HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
   _new_mbc = ctl.robot().mbc();
@@ -167,11 +167,12 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel, 
                                                                   ctl);
   ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
-  // ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
-  ctl.hammer_tip_reference_position_vector = gripper_task->target().translation(); // TODO: revert this back when test is done
+  ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
+  // ctl.hammer_tip_reference_position_vector = gripper_task->target().translation();
   ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass, 
                                                                     ctl.hammer_tip_actual_velocity_vector, 
                                                                     ctl.nail_normal_vector_world_frame);
+  ctl.bspline_tracking_error = ctl.hammer_tip_actual_position_vector - ctl.hammer_tip_reference_position_vector;
 
   Eigen::Matrix3d current_hammer_rotation = ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation();
   ctl.vector_orientation_error = vector_error(-ctl.nail_normal_vector_world_frame, 
@@ -192,27 +193,33 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
                         abs(ctl.nail_force_vector.z()) >= ctl.magic_force_threshold;
 
 
-  if(iii > 99){
-    auto error = gripper_task->eval();
-    mc_rtc::log::info("Gripper task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
+  if(iii > _logging_freq){
+    // auto error = _BSplineVel->eval();
+    // auto tracking_error = _BSplineVel->evalTracking();
+    // auto target = _BSplineVel->target().translation();;
+
+    // mc_rtc::log::info("BSpline task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
+    // mc_rtc::log::info("BSpline target [x, y, z] [{}, {}, {}]", target[0], target[1], target[2]);
+    mc_rtc::log::info("BSpline task tracking error [x, y, z] [{}, {}, {}]", ctl.bspline_tracking_error[0], ctl.bspline_tracking_error[1], ctl.bspline_tracking_error[2]);
+
     iii = 0;
   }
   iii++;
 
 
-  // if(ctl.impact_detected)
-  // {
-  //   Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
+  if(ctl.impact_detected)
+  {
+    Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
     
-  //   mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
+    mc_rtc::log::info("IMPACT DETECTED ON THE NAIL");
 
-  //   mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
-  //   mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
-  //   mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
+    mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
+    mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
+    mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
 
-  //   output("STOP");
-  //   return true;
-  // }
+    output("STOP");
+    return true;
+  }
 
   if(stop){
     mc_rtc::log::info("Stop button clicked");
@@ -1092,6 +1099,8 @@ void Get_In_Position_Task::load_params()
   _magic_BSpline_max_duration = _config(magic_values_key)("magic_BSpline_max_duration");
   _magic_BSpline_task_stiffness = _config(magic_values_key)("magic_BSpline_task_stiffness");
   _magic_BSpline_task_weight = _config(magic_values_key)("magic_BSpline_task_weight");
+
+  _logging_freq = _config(magic_values_key)("logging_freq");
 
   _gripper_task_weight = _config(magic_values_key)("gripper_task_weight");
   _gripper_task_min_stiffness = _config(magic_values_key)("gripper_task_min_stiffness");
