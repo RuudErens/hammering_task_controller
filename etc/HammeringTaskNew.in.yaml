@@ -27,7 +27,7 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [0, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
+      rotation: [0, -0.2, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
 
 
 
@@ -85,10 +85,10 @@ states:
       #No real meaning behind these values
 
       #Set to 0 to disable BSplineTask
-      magic_BSpline_task_weight: 1
+      magic_BSpline_task_weight: 100
       
       magic_BSpline_max_duration: 1 #seconds
-      magic_BSpline_task_stiffness: 10000
+      magic_BSpline_task_stiffness: 60000
       magic_BSpline_task_dimweight_x: 1
       magic_BSpline_task_dimweight_y: 1
       magic_BSpline_task_dimweight_z: 1
@@ -97,15 +97,13 @@ states:
       magic_posture_task_stiffness: 1
 
       #Set to 0 to disable EMMT
-      magic_effective_mass_maximization_task_weight: 0
+      magic_effective_mass_maximization_task_weight: 1
 
       #Set to 0 to disable VectorOrientationTask
       magic_vector_orientation_task_weight: 10
 
-      magic_vector_orientation_task_stiffness: 100
+      magic_vector_orientation_task_stiffness: 250
 
-      # Number of timesteps between every logging instance
-      logging_freq: 50
 
       gripper_task_min_stiffness: 10
       gripper_task_max_stiffness: 20000
@@ -113,9 +111,12 @@ states:
       gripper_task_s: 0.5
       gripper_task_weight: 10000
 
+      # Number of timesteps between every logging instance
+      logging_freq: 50
+
     curve_constraints:
       # Normal velocity of the hammer tip at the nail
-      magic_normal_final_velocity: [0, 0, -1]
+      magic_normal_final_velocity: [0, 0, -2]
       
       linear_velocity:
         x:
