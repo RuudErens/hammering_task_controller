@@ -120,6 +120,11 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   mc_rtc::log::info("Mass of the nail = {} kg", ctl.robot(ctl.nail_robot_name).mass());
   mc_rtc::log::info("solver timestep = {} s", ctl.solver().dt());
 
+  // Add impulse constraint
+  // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0);
+  // ctl.solver().addConstraintSet(impulseConstraint);
+
+
 }
 
 

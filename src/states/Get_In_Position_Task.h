@@ -13,6 +13,7 @@
 #include <mc_tasks/BSplineTrajectoryTask.h>
 #include <mc_tasks/PositionTask.h>
 #include <mc_trajectory/BSpline.h>
+#include <mc_solver/ImpulseConstraint.h>
 
 #include <memory>
 #include <ndcurves/curve_constraint.h>
@@ -325,6 +326,12 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     // variables for stiffness staggering
     bool first_iteration = true;
-    double first_instance_error;  
+    double first_instance_error;
+
+    // double _c_res = 0.9;
+    // double _delta_t = 0.005;
+    // double _dt_multi = 2.5;
+    // std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
+
 
 };

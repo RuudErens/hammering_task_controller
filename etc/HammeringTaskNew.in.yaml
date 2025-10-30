@@ -74,6 +74,16 @@ global_controller_params:
     #No real meaning behind these values
     magic_force_threshold: 1
 
+    # Values for impulse constraint
+    c_res: 1
+    delta_t: 0.001
+    impulsive_tau_limit_multiplier: 2.5
+
+    #values for dynamic constraint
+    damping: [ 0.1, 0.01, 0.5 ]
+    velocity_percentage: 0.9
+
+
 
 states:
 
@@ -103,7 +113,6 @@ states:
       magic_vector_orientation_task_weight: 10
 
       magic_vector_orientation_task_stiffness: 250
-
 
       gripper_task_min_stiffness: 10
       gripper_task_max_stiffness: 20000

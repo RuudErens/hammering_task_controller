@@ -37,9 +37,11 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
     //   new mc_solver::DynamicsConstraint(
     //       robots(), 0, {0.1, 0.01, xsiOff_, m_, lambda_}, 0.9, true));
   // const std::array<double, 3> damping = {0.55, 0.30, 0.9};
-  dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), damping, 0.9, false);
+  dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), _damping, _vp, false);
   solver().addConstraintSet(dynamicsConstraint);
 
+  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0);
+  solver().addConstraintSet(impulseConstraint);
 
   mc_rtc::log::success("HammeringTaskNew init done ");
 }
@@ -128,7 +130,12 @@ void HammeringTaskNew::load_parameters()
   std::string magic_values_key = "magic_values";
   magic_force_threshold = config_(global_controller)(magic_values_key)("magic_force_threshold");
 
-  
+  // ------------------------ Loading constraint parameters ---------------------------
+  _c_res  = config_(global_controller)(magic_values_key)("c_res");
+  _delta_t  = config_(global_controller)(magic_values_key)("delta_t");
+  _dt_multi  = config_(global_controller)(magic_values_key)("impulsive_tau_limit_multiplier");
+  _damping  = config_(global_controller)(magic_values_key)("damping");
+  _vp  = config_(global_controller)(magic_values_key)("velocity_percentage");
 
 }
 

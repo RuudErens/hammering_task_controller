@@ -5,6 +5,7 @@
 
 // BSplineTrajectoryTask and curve constraints
 #include <mc_solver/DynamicsConstraint.h>
+#include <mc_solver/ImpulseConstraint.h>
 #include <mc_tasks/PostureTask.h>
 #include <ndcurves/curve_constraint.h>
 
@@ -58,9 +59,15 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     std::vector<std::vector<double>> base_posture_vector;
 
-    const std::array<double, 3> damping = {0.1, 0.01, 0.5};
+    // constraints
+    std::array<double, 3> _damping/* = {0.1, 0.01, 0.5}*/;
+    double _vp;
     std::unique_ptr<mc_solver::DynamicsConstraint> dynamicsConstraint;
 
+    double _c_res;
+    double _delta_t;
+    double _dt_multi;
+    std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
 
     // ------------------------------ Parameters ---------------------------------------------  
     // Parameters loaded in the load_parameters function, parameters are found in the HammeringTaskNew.in.yaml file
