@@ -27,7 +27,7 @@ robots:
     module: object/nail
     init_pos:
       translation: [0.55, 0.30 , 0.9]
-      rotation: [0, -0.2, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
+      rotation: [0, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
 
 
 
@@ -107,14 +107,14 @@ states:
       magic_posture_task_stiffness: 1
 
       #Set to 0 to disable EMMT
-      magic_effective_mass_maximization_task_weight: 1
+      magic_effective_mass_maximization_task_weight: 5
 
       #Set to 0 to disable VectorOrientationTask
       magic_vector_orientation_task_weight: 10
 
       magic_vector_orientation_task_stiffness: 250
 
-      gripper_task_min_stiffness: 10
+      gripper_task_min_stiffness: 120
       gripper_task_max_stiffness: 20000
       gripper_task_goal_error: 0.0001
       gripper_task_s: 0.5

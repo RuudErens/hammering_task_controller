@@ -4,7 +4,7 @@
 
 
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config, Backend::TVM) //
+: mc_control::fsm::Controller(rm, dt, config, Backend::TVM)
 {
 
   config_.load(config);
@@ -40,7 +40,7 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
   dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), _damping, _vp, false);
   solver().addConstraintSet(dynamicsConstraint);
 
-  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0);
+  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0, logger());
   solver().addConstraintSet(impulseConstraint);
 
   mc_rtc::log::success("HammeringTaskNew init done ");

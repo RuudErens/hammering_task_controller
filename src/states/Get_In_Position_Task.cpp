@@ -205,7 +205,7 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
 
     // mc_rtc::log::info("BSpline task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
     // mc_rtc::log::info("BSpline target [x, y, z] [{}, {}, {}]", target[0], target[1], target[2]);
-    mc_rtc::log::info("BSpline task tracking error [x, y, z] [{}, {}, {}]", ctl.bspline_tracking_error[0], ctl.bspline_tracking_error[1], ctl.bspline_tracking_error[2]);
+    mc_rtc::log::info("BSpline task tracking error [x, y, z] [{:.5f}, {:.5f}, {:.5f}]", ctl.bspline_tracking_error[0], ctl.bspline_tracking_error[1], ctl.bspline_tracking_error[2]);
 
     iii = 0;
   }
