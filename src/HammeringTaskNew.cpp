@@ -37,17 +37,19 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
     //   new mc_solver::DynamicsConstraint(
     //       robots(), 0, {0.1, 0.01, xsiOff_, m_, lambda_}, 0.9, true));
   // const std::array<double, 3> damping = {0.55, 0.30, 0.9};
-  dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), _damping, _vp, false);
+  dynamicsConstraint = std::make_unique<mc_solver::DynamicsConstraint>(robots(), robot().robotIndex(), solver().dt(), _damping, _vp, false, true);
   solver().addConstraintSet(dynamicsConstraint);
 
-  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0, logger());
-  solver().addConstraintSet(impulseConstraint);
+  // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), _delta_t, _c_res, _dt_multi, 0, logger());
+  // solver().addConstraintSet(impulseConstraint);
 
   mc_rtc::log::success("HammeringTaskNew init done ");
 }
 
 bool HammeringTaskNew::run()
 {
+  hammer_tip_actual_position_vector = robot().frame(hammer_head_frame_name).position().translation();
+
   return mc_control::fsm::Controller::run(mc_solver::FeedbackType::ClosedLoopIntegrateReal);
 
 }

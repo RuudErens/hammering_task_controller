@@ -112,13 +112,13 @@ states:
       #Set to 0 to disable VectorOrientationTask
       magic_vector_orientation_task_weight: 10
 
-      magic_vector_orientation_task_stiffness: 250
+      magic_vector_orientation_task_stiffness: 60
 
-      gripper_task_min_stiffness: 120
+      gripper_task_min_stiffness: 60
       gripper_task_max_stiffness: 20000
       gripper_task_goal_error: 0.0001
       gripper_task_s: 0.5
-      gripper_task_weight: 10000
+      gripper_task_weight: 100
 
       # Number of timesteps between every logging instance
       logging_freq: 50

@@ -328,10 +328,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
     bool first_iteration = true;
     double first_instance_error;
 
-    // double _c_res = 0.9;
-    // double _delta_t = 0.005;
-    // double _dt_multi = 2.5;
-    // std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
+    std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
 
 
 };
