@@ -120,11 +120,10 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   mc_rtc::log::info("Mass of the nail = {} kg", ctl.robot(ctl.nail_robot_name).mass());
   mc_rtc::log::info("solver timestep = {} s", ctl.solver().dt());
 
-  // Add impulse constraint
-  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), ctl._delta_t, ctl._c_res, ctl._dt_multi, 0, ctl.logger());
-  ctl.solver().addConstraintSet(impulseConstraint);
-
-
+  // // Add impulse constraint
+  // Eigen::Vector3d normal_nail = ctl.robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation().col(2).eval();
+  // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), normal_nail, ctl._lambda, ctl._delta_t, ctl._c_res, ctl._dt_multi, ctl.logger());
+  // ctl.solver().addConstraintSet(impulseConstraint);
 }
 
 

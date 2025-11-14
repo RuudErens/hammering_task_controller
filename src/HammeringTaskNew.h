@@ -65,9 +65,10 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     std::unique_ptr<mc_solver::DynamicsConstraint> dynamicsConstraint;
 
     double _c_res;
+    double _lambda;
     double _delta_t;
     double _dt_multi;
-    // std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
+    std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
 
     // ------------------------------ Parameters ---------------------------------------------  
     // Parameters loaded in the load_parameters function, parameters are found in the HammeringTaskNew.in.yaml file
