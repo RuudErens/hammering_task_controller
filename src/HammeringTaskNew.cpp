@@ -45,6 +45,26 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
   impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), normal_nail, _lambda, _delta_t, _c_res, _dt_multi, logger());
   solver().addConstraintSet(impulseConstraint);
 
+  // Print the joint names of the jionts in the q vector
+  mc_rtc::log::info("the robot has {} joints", robot().mb().nrJoints());
+  for (int i=0; i<robot().mb().nrJoints(); ++i)
+  {
+    const rbd::Joint & joint = robot().mb().joint(i);
+    for (size_t j=0; j<joint.dof(); ++j)
+    {
+      mc_rtc::log::info("{}", joint.name());
+    }
+  }
+
+  // controller->robots().robot(r.name).module().ref_joint_order()
+  // // Add arrow to check whether we use the correct normal vector
+  // start_ = robot(nail_robot_name).frame(nail_frame_name).position().translation();
+  // end_ = start_ + 0.2*robot(nail_robot_name).frame(nail_frame_name).position().rotation().col(2).eval();
+  // gui()->addElement({"a", "b"},
+  // mc_rtc::gui::Arrow("ArrowRO", [this]() { return start_; }, [this]() { return end_; })
+  // );
+
+
   mc_rtc::log::success("HammeringTaskNew init done ");
 }
 
@@ -152,23 +172,23 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Hammer tip velocity [m/s]", this, [&, this]()
     {return hammer_tip_actual_velocity_vector;});
       
-    logger().addLogEntry("Hammer tip reference bezier velocity [m/s]", this, [&, this]()
-    {return hammer_tip_reference_velocity_vector;});
+    // logger().addLogEntry("Hammer tip reference bezier velocity [m/s]", this, [&, this]()
+    // {return hammer_tip_reference_velocity_vector;});
 
     logger().addLogEntry("Hammer tip position [m]", this, [&, this]()
     {return hammer_tip_actual_position_vector;});
       
-    logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
-    {return hammer_tip_reference_position_vector;});
+    // logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
+    // {return hammer_tip_reference_position_vector;});
 
-    logger().addLogEntry("Bspline tracking error [m]", this, [&, this]()
-    {return bspline_tracking_error;});
+    // logger().addLogEntry("Bspline tracking error [m]", this, [&, this]()
+    // {return bspline_tracking_error;});
 
     logger().addLogEntry("Projected momentum of hammer tip [kgm/s]", this, [&, this]()
     {return projected_momentum_of_hammer_tip;});
 
-    logger().addLogEntry("Vector orientation error", this, [&, this]()
-    {return vector_orientation_error;});
+    // logger().addLogEntry("Vector orientation error", this, [&, this]()
+    // {return vector_orientation_error;});
 
     logger().addLogEntry("Nail force sensor", this, [&, this]()
     {return nail_force_vector;});

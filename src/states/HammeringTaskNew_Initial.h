@@ -14,5 +14,5 @@ struct HammeringTaskNew_Initial : mc_control::fsm::State
 
   private:
     bool _positionning_hammer_clicked = false;
-
+    double total_time_elapsed;
 };

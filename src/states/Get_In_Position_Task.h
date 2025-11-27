@@ -307,6 +307,16 @@ struct Get_In_Position_Task : mc_control::fsm::State
     const double compute_effective_mass_naive(rbd::MultiBodyConfig mbc, 
                                               mc_control::fsm::Controller & ctl_) const;
 
+    /**
+    @brief add logging values specific to this state
+    */
+    void add_logs(mc_control::fsm::Controller & ctl_);
+
+    /**
+    @brief remove logging values specific to this state
+    */
+    void rm_logs(mc_control::fsm::Controller & ctl_);
+
     bool _create_file = true;
 
     // Quaternion rotation axis

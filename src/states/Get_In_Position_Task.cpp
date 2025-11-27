@@ -19,6 +19,8 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 {
   HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
   load_params();
+
+  add_logs(ctl_);
  
   // Add a stop button to the gui
   ctl.gui()->addElement({}, mc_rtc::gui::Button(ctl.stop_hammering_button_name, [this]() { stop = true; }));
@@ -173,7 +175,7 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
   // ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
   ctl.hammer_tip_reference_position_vector = gripper_task->target().translation();
-  ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass, 
+  ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass,
                                                                     ctl.hammer_tip_actual_velocity_vector, 
                                                                     ctl.nail_normal_vector_world_frame);
   ctl.bspline_tracking_error = ctl.hammer_tip_actual_position_vector - ctl.hammer_tip_reference_position_vector;
@@ -239,12 +241,14 @@ void Get_In_Position_Task::teardown(mc_control::fsm::Controller & ctl_)
   HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
 
   ctl.gui()->removeElement({}, ctl.stop_hammering_button_name);
-  ctl.solver().removeTask(gripper_task);
+  // ctl.solver().removeTask(gripper_task);
   ctl.solver().removeTask(_BSplineVel);
   ctl.solver().removeTask(_vectorOrientationTask);
+  // ctl.solver().removeConstraintSet(impulseConstraint);
   // ctl.getPostureTask(ctl.main_robot_name)->refAccel(0*_gradient_of_m);
   // ctl.solver().removeTask(ctl.getPostureTask(ctl.main_robot_name));
   ctl.getPostureTask(ctl.robot().name())->refAccel(0 * _gradient_of_m);
+  rm_logs(ctl_);
   mc_rtc::log::info("Tasks cleared successfully");
 }
 
@@ -1137,6 +1141,33 @@ void Get_In_Position_Task::load_params()
   _constr.end_acc.x() = _config(curve_constraints_key)(linear_acceleration_key)(x_key)(end_key);
   _constr.end_acc.y() = _config(curve_constraints_key)(linear_acceleration_key)(y_key)(end_key);
   _constr.end_acc.z() = _config(curve_constraints_key)(linear_acceleration_key)(z_key)(end_key);
+}
+
+void Get_In_Position_Task::add_logs(mc_control::fsm::Controller & ctl_)
+{
+  HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
+
+  ctl.logger().addLogEntry("Hammer tip reference bezier velocity [m/s]", this, [&, this]()
+  {return ctl.hammer_tip_reference_velocity_vector;});
+
+  ctl.logger().addLogEntry("Hammer tip reference bezier position [m]", this, [&, this]()
+  {return ctl.hammer_tip_reference_position_vector;});
+
+  ctl.logger().addLogEntry("Bspline tracking error [m]", this, [&, this]()
+  {return ctl.bspline_tracking_error;});
+
+  ctl.logger().addLogEntry("Vector orientation error", this, [&, this]()
+  {return ctl.vector_orientation_error;});
+}
+
+void Get_In_Position_Task::rm_logs(mc_control::fsm::Controller & ctl_)
+{
+  HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
+
+  ctl.logger().removeLogEntry("Hammer tip reference bezier velocity [m/s]");
+  ctl.logger().removeLogEntry("Hammer tip reference bezier position [m]");
+  ctl.logger().removeLogEntry("Bspline tracking error [m]");
+  ctl.logger().removeLogEntry("Vector orientation error");
 }
 
 EXPORT_SINGLE_STATE("Get_In_Position_Task", Get_In_Position_Task)
