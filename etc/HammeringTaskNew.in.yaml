@@ -148,6 +148,40 @@ states:
       orientation:
         enable_BSpline_orientation: false
 
+  Hammer::Go_To_Position:
+    base: Go_To_Position
+
+    magic_values:
+      magic_vector_orientation_task_weight: 10
+      magic_vector_orientation_task_stiffness: 60
+
+      gripper_task_min_stiffness: 60
+      gripper_task_max_stiffness: 20000
+      gripper_task_goal_error: 0.0001
+      gripper_task_s: 0.5
+      gripper_task_weight: 100
+
+      magic_BSpline_task_dimweight_x: 1
+      magic_BSpline_task_dimweight_y: 1
+      magic_BSpline_task_dimweight_z: 1
+
+  Hammer::Hammer_Down:
+    base: Hammer_Down
+
+    magic_values:
+      magic_vector_orientation_task_weight: 10
+      magic_vector_orientation_task_stiffness: 60
+
+      gripper_task_min_stiffness: 60
+      gripper_task_max_stiffness: 20000
+      gripper_task_goal_error: 0.0001
+      gripper_task_s: 0.5
+      gripper_task_weight: 100
+
+      magic_BSpline_task_dimweight_x: 1
+      magic_BSpline_task_dimweight_y: 1
+      magic_BSpline_task_dimweight_z: 1
+
   Hammer::Post_Impact_Task:
     #c.f. Post_Impact_Task.cpp
     base: Post_Impact_Task
@@ -219,9 +253,9 @@ states:
   Hammer::HammeringFSM:
     base: Meta
     transitions:
-      - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
-      - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
-      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
+      - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Go_To_Position, Auto]
+      - [Hammer::Go_To_Position, Hammering_Position_Reached, Hammer::Hammer_Down, Auto]
+      - [Hammer::Hammer_Down, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
 
 
 # Transitions map
