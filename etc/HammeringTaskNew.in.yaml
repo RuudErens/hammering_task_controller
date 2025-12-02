@@ -77,7 +77,8 @@ global_controller_params:
     # Values for impulse constraint
     c_res: 1
     delta_t: 0.001
-    lambda: 500
+    lambda_high: 25
+    lambda_low: 25
     impulsive_tau_limit_multiplier: 2.5
 
     #values for dynamic constraint

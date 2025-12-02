@@ -42,7 +42,7 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
 
   // Add impulse constraint
   Eigen::Vector3d normal_nail = robot(nail_robot_name).frame(nail_frame_name).position().rotation().col(2).eval();
-  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), normal_nail, _lambda, _delta_t, _c_res, _dt_multi, logger());
+  impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), normal_nail, _lambda_high, _lambda_low, _delta_t, _c_res, _dt_multi, logger());
   solver().addConstraintSet(impulseConstraint);
 
   // Print the joint names of the jionts in the q vector
@@ -156,7 +156,8 @@ void HammeringTaskNew::load_parameters()
 
   // ------------------------ Loading constraint parameters ---------------------------
   _c_res  = config_(global_controller)(magic_values_key)("c_res");
-  _lambda  = config_(global_controller)(magic_values_key)("lambda");
+  _lambda_high  = config_(global_controller)(magic_values_key)("lambda_high");
+  _lambda_low = config_(global_controller)(magic_values_key)("lambda_low");
   _delta_t  = config_(global_controller)(magic_values_key)("delta_t");
   _dt_multi  = config_(global_controller)(magic_values_key)("impulsive_tau_limit_multiplier");
   _damping  = config_(global_controller)(magic_values_key)("damping");

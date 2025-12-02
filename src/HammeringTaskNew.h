@@ -65,7 +65,8 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     std::unique_ptr<mc_solver::DynamicsConstraint> dynamicsConstraint;
 
     double _c_res;
-    double _lambda;
+    double _lambda_high;
+    double _lambda_low;
     double _delta_t;
     double _dt_multi;
     std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;

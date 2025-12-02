@@ -43,7 +43,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   _oriWp = {};
   
   // The target is the translation of the nail
-  _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation() + Eigen::Vector3d(0, 0, 0.05);
+  _end_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();// + Eigen::Vector3d(0, 0, 0.05);
   // _end_point[2] += 0.02;
   // _target = sva::PTransformd(_end_point);
   // _target = sva::PTransformd(Eigen::Quaterniond(0.0f, 0.708, 0.0f, -0.705)) *sva::PTransformd(_end_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
@@ -78,7 +78,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
   _BSplineVel->dimWeight(dimweights);
-  // ctl.solver().addTask(_BSplineVel);
+  ctl.solver().addTask(_BSplineVel);
 
   mc_rtc::log::info("Degree of BSpline : {}", _BSplineVel->spline().get_bezier()->degree());
 
@@ -91,7 +91,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // Test transform task
   gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_min_stiffness, _gripper_task_weight);
-  ctl.solver().addTask(gripper_task);
+  // ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
   Eigen::Vector6d dimweights_grip = gripper_task->dimWeight();
@@ -124,8 +124,9 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // // Add impulse constraint
   // Eigen::Vector3d normal_nail = ctl.robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation().col(2).eval();
-  // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), normal_nail, ctl._lambda, ctl._delta_t, ctl._c_res, ctl._dt_multi, ctl.logger());
-  // ctl.solver().addConstraintSet(impulseConstraint);
+  // ctl.impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), normal_nail, /*ctl._lambda_high, */ctl._lambda_low, ctl._delta_t, ctl._c_res, ctl._dt_multi, ctl.logger());
+  // // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(    robots(),     robot().robotIndex(),     robot().frame(    hammer_head_frame_name), normal_nail,     _lambda_high,     _lambda_low,     _delta_t,     _c_res,                _dt_multi,        logger());
+  // ctl.solver().addConstraintSet(ctl.impulseConstraint);
 }
 
 
@@ -173,8 +174,8 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel, 
                                                                   ctl);
   ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
-  // ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
-  ctl.hammer_tip_reference_position_vector = gripper_task->target().translation();
+  ctl.hammer_tip_reference_position_vector = bezier_curve(_total_time_elapsed);
+  // ctl.hammer_tip_reference_position_vector = gripper_task->target().translation();
   ctl.projected_momentum_of_hammer_tip = compute_projected_momentum(ctl.effective_mass,
                                                                     ctl.hammer_tip_actual_velocity_vector, 
                                                                     ctl.nail_normal_vector_world_frame);
@@ -244,7 +245,7 @@ void Get_In_Position_Task::teardown(mc_control::fsm::Controller & ctl_)
   // ctl.solver().removeTask(gripper_task);
   ctl.solver().removeTask(_BSplineVel);
   ctl.solver().removeTask(_vectorOrientationTask);
-  // ctl.solver().removeConstraintSet(impulseConstraint);
+  // ctl.solver().removeConstraintSet(ctl.impulseConstraint);
   // ctl.getPostureTask(ctl.main_robot_name)->refAccel(0*_gradient_of_m);
   // ctl.solver().removeTask(ctl.getPostureTask(ctl.main_robot_name));
   ctl.getPostureTask(ctl.robot().name())->refAccel(0 * _gradient_of_m);
