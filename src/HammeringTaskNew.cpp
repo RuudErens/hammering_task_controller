@@ -43,7 +43,7 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
   // Add impulse constraint
   Eigen::Vector3d normal_nail = robot(nail_robot_name).frame(nail_frame_name).position().rotation().col(2).eval();
   impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(robots(), robot().robotIndex(), robot().frame(hammer_head_frame_name), normal_nail, _lambda_high, _lambda_low, _delta_t, _c_res, _dt_multi, logger());
-  solver().addConstraintSet(impulseConstraint);
+  // solver().addConstraintSet(impulseConstraint);
 
   // Print the joint names of the jionts in the q vector
   mc_rtc::log::info("the robot has {} joints", robot().mb().nrJoints());
@@ -54,6 +54,11 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
     {
       mc_rtc::log::info("{}", joint.name());
     }
+  }
+
+  for (auto frame : robot().frames())
+  {
+    mc_rtc::log::info("Frame {} is in {}", frame, robot().name());
   }
 
   // controller->robots().robot(r.name).module().ref_joint_order()
@@ -71,6 +76,7 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
 bool HammeringTaskNew::run()
 {
   hammer_tip_actual_position_vector = robot().frame(hammer_head_frame_name).position().translation();
+  hammer_tip_actual_velocity_vector = robot().frame(hammer_head_frame_name).velocity().linear();
 
   return mc_control::fsm::Controller::run(mc_solver::FeedbackType::ClosedLoopIntegrateReal);
 
@@ -196,5 +202,9 @@ void HammeringTaskNew::add_logs()
 
     // logger().addLogEntry("Normal force applied to the nail", this, [&, this]()
     // {return vector_orientation_error;});
+
+    logger().addLogEntry("bspline_active", this, [&, this]()
+    {return 100*bspline_active_;});
+
 }
 

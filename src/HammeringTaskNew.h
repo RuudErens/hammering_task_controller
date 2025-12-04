@@ -39,7 +39,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     mc_rtc::NodeHandlePtr nh; 
 
     // Hammer
-    const Eigen::Vector3d normal_vector_to_align_in_hammerhead_frame = {1, 0, 0}; 
+    const Eigen::Vector3d normal_vector_to_align_in_hammerhead_frame = {1, 0, 0};
 
     // Nail
     Eigen::Matrix3d nail_rot;
@@ -54,6 +54,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     Eigen::Vector3d hammer_tip_reference_velocity_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_reference_position_vector = {0, 0, 0};
     Eigen::Vector3d bspline_tracking_error;
+    bool bspline_active_ = false;
     double projected_momentum_of_hammer_tip = 0.0f;
     double vector_orientation_error = 0.0f;
 
@@ -79,7 +80,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     const std::string nail_robot_name = "nail";
     const std::string main_robot_name = "hrp5_p";
-    const std::string hammer_head_frame_name = "Hammer_Head";
+    const std::string hammer_head_frame_name = "Lhand_Link0_Plan2";//"Hammer_Head";
     const std::string nail_frame_name = "nail";
     
     // quality of life

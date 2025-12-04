@@ -29,6 +29,8 @@
 
 #include <mc_tasks/TransformTask.h>
 #include <mc_tasks/VectorOrientationTask.h>
+#include <mc_tasks/ExactCubicTrajectoryTask.h>
+
 typedef Eigen::Vector3d Point;
 typedef Point point_t;
 typedef ndcurves::curve_constraints<point_t> curve_constraints_t;
@@ -48,6 +50,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     // BSpline curve
     std::shared_ptr<mc_tasks::BSplineTrajectoryTask> _BSplineVel;
+    // std::shared_ptr<mc_tasks::ExactCubicTrajectoryTask> _BSplineVel2;
     std::shared_ptr<mc_tasks::VectorOrientationTask> _vectorOrientationTask;
     mc_trajectory::BSpline::waypoints_t _posWp = {};
     std::vector<std::pair<double, Eigen::Matrix3d>> _oriWp = {};

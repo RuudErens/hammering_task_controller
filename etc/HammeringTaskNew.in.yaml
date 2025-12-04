@@ -77,7 +77,7 @@ global_controller_params:
     # Values for impulse constraint
     c_res: 1
     delta_t: 0.001
-    lambda_high: 25
+    lambda_high: 500
     lambda_low: 25
     impulsive_tau_limit_multiplier: 2.5
 
@@ -222,8 +222,8 @@ states:
     base: Meta
     transitions:
       - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
-      - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
-      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
+      - [Hammer::Get_In_Position_Task, STOP, HammeringTaskNew_Initial, Auto]
+#      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
 
 
 # Transitions map
