@@ -46,20 +46,22 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
   // solver().addConstraintSet(impulseConstraint);
 
   // Print the joint names of the jionts in the q vector
-  mc_rtc::log::info("the robot has {} joints", robot().mb().nrJoints());
-  for (int i=0; i<robot().mb().nrJoints(); ++i)
-  {
-    const rbd::Joint & joint = robot().mb().joint(i);
-    for (size_t j=0; j<joint.dof(); ++j)
-    {
-      mc_rtc::log::info("{}", joint.name());
-    }
-  }
+  // mc_rtc::log::info("the robot has {} joints", robot().mb().nrJoints());
+  // for (int i=0; i<robot().mb().nrJoints(); ++i)
+  // {
+  //   const rbd::Joint & joint = robot().mb().joint(i);
+  //   for (size_t j=0; j<joint.dof(); ++j)
+  //   {
+  //     mc_rtc::log::info("{}", joint.name());
+  //   }
+  // }
+  //
+  // for (auto frame : robot().frames())
+  // {
+  //   mc_rtc::log::info("Frame {} is in {}", frame, robot().name());
+  // }
 
-  for (auto frame : robot().frames())
-  {
-    mc_rtc::log::info("Frame {} is in {}", frame, robot().name());
-  }
+  // mc_rtc::log::info(robot().tvmRobot().limits().tu);
 
   // controller->robots().robot(r.name).module().ref_joint_order()
   // // Add arrow to check whether we use the correct normal vector

@@ -38,13 +38,13 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // _constr.end_vel.y() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.y();
   // _constr.end_vel.z() = _magic_normal_final_velocity*ctl.nail_normal_vector_world_frame.z();
   _constr.end_vel = ctl.nail_rot.transpose()*_magic_normal_final_velocity;
-  
+
   // No need for orientation waypoints so _oriWp is empty
   _oriWp = {};
   
   // The target is the translation of the nail
-  Eigen::Vector3d _nail_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
-  _end_point = _nail_point + Eigen::Vector3d(0, 0, 0.3);
+  _nail_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
+  _end_point = _nail_point + Eigen::Vector3d(0, 0, 0);
   _posWp = {/*_nail_point*/};
 
   // _end_point[2] += 0.02;
@@ -81,7 +81,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   dimweights(4) = _magic_BSpline_task_dimweight_y;
   dimweights(5) = _magic_BSpline_task_dimweight_z;
   _BSplineVel->dimWeight(dimweights);
-  // ctl.solver().addTask(_BSplineVel);
+  ctl.solver().addTask(_BSplineVel);
   ctl.bspline_active_ = true;
 
     // _constr.init_vel = ctl.hammer_tip_actual_velocity_vector;
@@ -136,7 +136,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
 
   // Test transform task
   gripper_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _gripper_task_min_stiffness, _gripper_task_weight);
-  ctl.solver().addTask(gripper_task);
+  // ctl.solver().addTask(gripper_task);
   gripper_task->target(gripper_target);
 
   Eigen::Vector6d dimweights_grip = gripper_task->dimWeight();
@@ -157,7 +157,7 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // ------------------------- VectorOrientationTask ----------------------------
 
   _vectorOrientationTask = std::make_shared<mc_tasks::VectorOrientationTask>(ctl.robot().frame(ctl.hammer_head_frame_name),
-                                                                            -1.f*ctl.normal_vector_to_align_in_hammerhead_frame
+                                                                            ctl.normal_vector_to_align_in_hammerhead_frame
   );
   _vectorOrientationTask->targetVector(-ctl.nail_normal_vector_world_frame);
   _vectorOrientationTask->weight(_magic_vector_orientation_task_weight);
@@ -171,7 +171,30 @@ void Get_In_Position_Task::start(mc_control::fsm::Controller & ctl_)
   // Eigen::Vector3d normal_nail = ctl.robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation().col(2).eval();
   // ctl.impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(ctl.robots(), ctl.robot().robotIndex(), ctl.robot().frame(ctl.hammer_head_frame_name), normal_nail, /*ctl._lambda_high, */ctl._lambda_low, ctl._delta_t, ctl._c_res, ctl._dt_multi, ctl.logger());
   // // impulseConstraint = std::make_unique<mc_solver::ImpulseConstraint>(    robots(),     robot().robotIndex(),     robot().frame(    hammer_head_frame_name), normal_nail,     _lambda_high,     _lambda_low,     _delta_t,     _c_res,                _dt_multi,        logger());
-  // ctl.solver().addConstraintSet(ctl.impulseConstraint);
+  ctl.solver().addConstraintSet(ctl.impulseConstraint);
+
+  // Post Bspline velocity task
+  // _target_velocity = ctl.nail_rot.transpose()*_magic_normal_final_velocity;
+  // _target_vel = sva::MotionVecd(Eigen::Vector3d::Zero(), _target_velocity);
+  // _transform_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _velocity_task_stiffness, _velocity_task_weight);
+  // _transform_task->targetVel(_target_vel);
+  // _transform_task->setGains(0, _velocity_task_stiffness);
+  //
+  // Eigen::Vector6d dimweights_transform_task = _transform_task->dimWeight();
+  // // Remove the orientation part of the BSpline by setting the orientation weights to 0
+  // if(!_enable_BSpline_orientation)
+  // {
+  //   dimweights_transform_task(0) = 0;
+  //   dimweights_transform_task(1) = 0;
+  //   dimweights_transform_task(2) = 0;
+  // }
+  // // Increase the weights on the x and y coordinates
+  // dimweights_transform_task(3) = _magic_BSpline_task_dimweight_x;
+  // dimweights_transform_task(4) = _magic_BSpline_task_dimweight_y;
+  // dimweights_transform_task(5) = _magic_BSpline_task_dimweight_z*2000.f;
+  // _transform_task->dimWeight(dimweights_transform_task);
+  // ctl.solver().addTask(_transform_task);
+
 }
 
 
@@ -216,8 +239,15 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   ctl.effective_mass = ctl.compute_effective_mass_with_mbc();
   // ctl.hammer_tip_actual_velocity_vector = ctl.robot().frame(ctl.hammer_head_frame_name).velocity().linear();
   // ctl.hammer_tip_actual_position_vector = ctl.robot().frame(ctl.hammer_head_frame_name).position().translation();
-  ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel, 
+  if (ctl.bspline_active_)
+  {
+    ctl.hammer_tip_reference_velocity_vector = bezier_vel_from_task(_BSplineVel,
                                                                   ctl);
+  } else
+  {
+    // const auto sva_vel = _transform_task->refVelB();
+    ctl.hammer_tip_reference_velocity_vector = _transform_task->refVelB().linear();
+  }
   ndcurves::bezier_curve bezier_curve = *_BSplineVel->spline().get_bezier();
   if (ctl.bspline_active_)
   {
@@ -251,27 +281,74 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
                         abs(ctl.nail_force_vector.y()) >= ctl.magic_force_threshold || 
                         abs(ctl.nail_force_vector.z()) >= ctl.magic_force_threshold;
 
+  double impact_detection_position_threshold = 0.05;
+  bool impact_trhough_position = (ctl.hammer_tip_actual_position_vector[0] >= _end_point[0] - impact_detection_position_threshold || ctl.hammer_tip_actual_position_vector[0] <= _end_point[0] + impact_detection_position_threshold) &&
+                                 (ctl.hammer_tip_actual_position_vector[1] >= _end_point[1] - impact_detection_position_threshold || ctl.hammer_tip_actual_position_vector[1] <= _end_point[1] + impact_detection_position_threshold) &&
+                                 ctl.hammer_tip_actual_position_vector[2] <= _end_point[2];
 
-  if(iii > _logging_freq){
-    // auto error = _BSplineVel->eval();
-    // auto tracking_error = _BSplineVel->evalTracking();
-    // auto target = _BSplineVel->target().translation();;
 
-    // mc_rtc::log::info("BSpline task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
-    // mc_rtc::log::info("BSpline target [x, y, z] [{}, {}, {}]", target[0], target[1], target[2]);
-    mc_rtc::log::info("BSpline task tracking error [x, y, z] [{:.5f}, {:.5f}, {:.5f}]", ctl.bspline_tracking_error[0], ctl.bspline_tracking_error[1], ctl.bspline_tracking_error[2]);
+  // if(iii > _logging_freq && ctl.bspline_active_){
+  //   // auto error = _BSplineVel->eval();
+  //   // auto tracking_error = _BSplineVel->evalTracking();
+  //   // auto target = _BSplineVel->target().translation();;
+  //
+  //   // mc_rtc::log::info("BSpline task error [x, y, z] [{}, {}, {}]", error[0], error[1], error[2]);
+  //   // mc_rtc::log::info("BSpline target [x, y, z] [{}, {}, {}]", target[0], target[1], target[2]);
+  //   mc_rtc::log::info("BSpline task tracking error [x, y, z] [{:.5f}, {:.5f}, {:.5f}]", ctl.bspline_tracking_error[0], ctl.bspline_tracking_error[1], ctl.bspline_tracking_error[2]);
+  //
+  //   iii = 0;
+  // } else if (!ctl.bspline_active_)
+  // {
+  //   mc_rtc::log::info("Position {} with goal {}", ctl.hammer_tip_actual_position_vector.transpose(), _end_point.transpose());
+  //   iii = 0;
+  // }
+  // iii++;
 
-    iii = 0;
+  if (!ctl.bspline_active_)
+  {
+    mc_rtc::log::info("Position {} with goal {}", ctl.hammer_tip_actual_position_vector.transpose(), _end_point.transpose());
   }
-  iii++;
 
 
-  if (_total_time_elapsed > _magic_BSpline_max_duration && ctl.bspline_active_)
+  if (_total_time_elapsed > (_magic_BSpline_max_duration/*+1.f*/) && ctl.bspline_active_)
   {
     mc_rtc::log::info("BSpline duration exceeded");
-    // ctl.solver().removeTask(_BSplineVel);
+    ctl.solver().removeTask(_BSplineVel);
+    // ctl.solver().removeTask(gripper_task);
+    _target_velocity = ctl.nail_rot.transpose()*_magic_normal_final_velocity;
+    _target_vel = sva::MotionVecd(Eigen::Vector3d::Zero(), _target_velocity);
+    _transform_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _velocity_task_stiffness, _velocity_task_weight);
+    _transform_task->reset();
+    _transform_task->targetVel(_target_vel);
+    _target_transform = sva::PTransformd(sva::RotX(M_PI)) * sva::PTransformd(sva::RotY(M_PI/2)) * sva::PTransformd(ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation()) *sva::PTransformd(_nail_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
+
+    _transform_task->target(_target_transform);
+    _transform_task->setGains(0, _velocity_task_stiffness);
+
+    Eigen::Vector6d dimweights_transform_task = _transform_task->dimWeight();
+    // Remove the orientation part of the BSpline by setting the orientation weights to 0
+    if(!_enable_BSpline_orientation)
+    {
+      dimweights_transform_task(0) = 0;
+      dimweights_transform_task(1) = 0;
+      dimweights_transform_task(2) = 0;
+    }
+    // Increase the weights on the x and y coordinates
+    dimweights_transform_task(3) = _magic_BSpline_task_dimweight_x;
+    dimweights_transform_task(4) = _magic_BSpline_task_dimweight_y;
+    dimweights_transform_task(5) = _magic_BSpline_task_dimweight_z;
+    _transform_task->dimWeight(dimweights_transform_task);
+    ctl.solver().addTask(_transform_task);
+    mc_rtc::log::info("setting target velocity {}", _target_velocity.transpose());
+    mc_rtc::log::info("setting target velocity {}", _target_vel);
     ctl.bspline_active_ = false;
+    mc_rtc::log::info("Active tasks:");
+    for (const auto & task : ctl.solver().tasks())
+    {
+      mc_rtc::log::info(" - {}", task->name());
+    }
   }
+
   //
   //   // The target is the translation of the nail
   //   Eigen::Vector3d _nail_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
@@ -318,7 +395,7 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   //
   // }
 
-  if(ctl.impact_detected)
+  if(ctl.impact_detected || impact_trhough_position)
   {
     Eigen::Vector3d hammer_normal_world_frame = (ctl.robot().frame(ctl.hammer_head_frame_name).position().rotation().transpose()*Eigen::Vector3d(1, 0, 0)).normalized();
     
@@ -327,6 +404,8 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::info("actual hammer normal in world frame = {}", hammer_normal_world_frame);
     mc_rtc::log::info("target hammer normal in world frame = {}", -ctl.nail_normal_vector_world_frame);
     mc_rtc::log::info("angle error = {} deg", (180/M_PI) * vector_error(hammer_normal_world_frame, -ctl.nail_normal_vector_world_frame));
+
+    mc_rtc::log::info("Impact velocity is: {}", ctl.hammer_tip_actual_velocity_vector.transpose());
 
     output("STOP");
     return true;
@@ -347,17 +426,17 @@ void Get_In_Position_Task::teardown(mc_control::fsm::Controller & ctl_)
 
   ctl.gui()->removeElement({}, ctl.stop_hammering_button_name);
   // ctl.solver().removeTask(gripper_task);
-  // if (true || ctl.bspline_active_)
-  // {
-  //   ctl.solver().removeTask(_BSplineVel);
-  //   ctl.bspline_active_ = false;
-  // } else
-  // {
-  ctl.solver().removeTask(gripper_task);
-  // }
+  if (ctl.bspline_active_)
+  {
+    ctl.solver().removeTask(_BSplineVel);
+    ctl.bspline_active_ = false;
+  } else
+  {
+    ctl.solver().removeTask(_transform_task);
+  }
 
   ctl.solver().removeTask(_vectorOrientationTask);
-  // ctl.solver().removeConstraintSet(ctl.impulseConstraint);
+  ctl.solver().removeConstraintSet(ctl.impulseConstraint);
   // ctl.getPostureTask(ctl.main_robot_name)->refAccel(0*_gradient_of_m);
   // ctl.solver().removeTask(ctl.getPostureTask(ctl.main_robot_name));
   ctl.getPostureTask(ctl.robot().name())->refAccel(0 * _gradient_of_m);
