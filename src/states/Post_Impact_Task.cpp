@@ -8,7 +8,7 @@
 void Post_Impact_Task::configure(const mc_rtc::Configuration & config)
 {
     _config.load(config);
-    mc_rtc::log::info("Post_Impact_Task configure function called with config :  \n{}", config.dump(true, true));
+    // mc_rtc::log::info("Post_Impact_Task configure function called with config :  \n{}", config.dump(true, true));
     load_parameters();
 }
 
@@ -23,6 +23,32 @@ void Post_Impact_Task::start(mc_control::fsm::Controller & ctl_)
     _postureTask->weight(_magic_posture_task_weight);
     ctl.getPostureTask(ctl.robot().name())->stiffness(_magic_posture_task_stiffness);
     ctl.getPostureTask(ctl.robot().name())->weight(_magic_posture_task_weight);
+
+    // _target_velocity = -1*ctl.nail_rot.transpose()*_magic_normal_final_velocity;
+    // _target_vel = sva::MotionVecd(Eigen::Vector3d::Zero(), _target_velocity);
+    // _nail_point = ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().translation();
+
+    // _transform_task = std::make_shared<mc_tasks::TransformTask>(ctl.robot().frame(ctl.hammer_head_frame_name), _velocity_task_stiffness, _velocity_task_weight);
+    // _transform_task->reset();
+    // _transform_task->targetVel(_target_vel);
+    // _target_transform = sva::PTransformd(sva::RotX(M_PI)) * sva::PTransformd(sva::RotY(M_PI/2)) * sva::PTransformd(ctl.robots().robot(ctl.nail_robot_name).frame(ctl.nail_frame_name).position().rotation()) *sva::PTransformd(_nail_point);//* sva::PTransformd(Eigen::Vector3d(0.5, 0.2, 1));
+    //
+    // _transform_task->target(_target_transform);
+    // _transform_task->setGains(_velocity_task_stiffness, _velocity_task_stiffness);
+    //
+    // Eigen::Vector6d dimweights_transform_task = _transform_task->dimWeight();
+    // // Remove the orientation part of the BSpline by setting the orientation weights to 0
+    //
+    // dimweights_transform_task(0) = 0;
+    // dimweights_transform_task(1) = 0;
+    // dimweights_transform_task(2) = 0;
+    // // Increase the weights on the x and y coordinates
+    // dimweights_transform_task(3) = _magic_BSpline_task_dimweight_x;
+    // dimweights_transform_task(4) = _magic_BSpline_task_dimweight_y;
+    // dimweights_transform_task(5) = _magic_BSpline_task_dimweight_z;
+    // _transform_task->dimWeight(dimweights_transform_task);
+    // ctl.solver().addTask(_transform_task);
+
 
     // ctl.solver().addTask(_postureTask);
 }
@@ -55,6 +81,14 @@ void Post_Impact_Task::load_parameters()
     _magic_posture_task_weight = _config(magic_values_key)("magic_posture_task_weight");
     _magic_posture_task_stiffness = _config(magic_values_key)("magic_posture_task_stiffness");
     _magic_posture_task_epsilon = _config(magic_values_key)("magic_posture_task_epsilon");
+
+    _magic_BSpline_task_dimweight_x = _config(magic_values_key)("magic_BSpline_task_dimweight_x");
+    _magic_BSpline_task_dimweight_y = _config(magic_values_key)("magic_BSpline_task_dimweight_y");
+    _magic_BSpline_task_dimweight_z = _config(magic_values_key)("magic_BSpline_task_dimweight_z");
+
+    std::string curve_constraints_key = "curve_constraints";
+    _magic_normal_final_velocity = _config(curve_constraints_key)("magic_normal_final_velocity");
+
 
 }
 

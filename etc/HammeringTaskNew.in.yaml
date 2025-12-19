@@ -67,7 +67,7 @@ global_controller_params:
     jacobian_verbose_active: false
  
   frames:
-    Hammer_Head_frame: "Hammer_Head"
+    Hammer_Head_frame: "Hammer_head"
     nail: "nail"
       
   magic_values:
@@ -78,8 +78,8 @@ global_controller_params:
     c_res: 1
     delta_t: 0.001
     lambda_high: 500
-    lambda_low: 25
-    impulsive_tau_limit_multiplier: 2.5
+    lambda_low: 125
+    impulsive_tau_limit_multiplier: 2
 
     #values for dynamic constraint
     damping: [ 0.1, 0.01, 0.5 ]
@@ -156,9 +156,35 @@ states:
 
     magic_values:
       #No real meaning behind these values
-      magic_posture_task_weight: 100
-      magic_posture_task_stiffness: 100
+      magic_posture_task_weight: 1
+      magic_posture_task_stiffness: 1
       magic_posture_task_epsilon: 0.15
+      magic_BSpline_task_dimweight_x: 1
+      magic_BSpline_task_dimweight_y: 1
+      magic_BSpline_task_dimweight_z: 1
+
+    curve_constraints:
+      # Normal velocity of the hammer tip at the nail
+      magic_normal_final_velocity: [0, 0, -2]
+
+      linear_velocity:
+        x:
+          init: 0
+        y:
+          init: 0
+        z:
+          init: 0
+      linear_acceleration:
+        x:
+          init: 0
+          end: 0
+        y:
+          init: 0
+          end: 0
+        z:
+          init: 0
+          end: 0
+
 
   # ------------------------ not directly used states ----------------------
   CoM:
@@ -222,8 +248,8 @@ states:
     base: Meta
     transitions:
       - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
-      - [Hammer::Get_In_Position_Task, STOP, HammeringTaskNew_Initial, Auto]
-#      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
+      - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
+      - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
 
 
 # Transitions map

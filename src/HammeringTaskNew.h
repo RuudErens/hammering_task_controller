@@ -80,7 +80,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     const std::string nail_robot_name = "nail";
     const std::string main_robot_name = "hrp5_p";
-    const std::string hammer_head_frame_name = "Hammer_Head";
+    const std::string hammer_head_frame_name = "Hammer_head";
     const std::string nail_frame_name = "nail";
     
     // quality of life
