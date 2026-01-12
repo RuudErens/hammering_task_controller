@@ -152,7 +152,7 @@ void HammeringTaskNew::load_parameters()
   // ------------------------ Loading frames ---------------------------
 
   std::string frames_key = "frames";
-  std::string hammerhead_frame_key = "Hammer_Head";
+  std::string hammerhead_frame_key = "Hammer_head";
   std::string nail_frame_key = "nail";
  config_(global_controller)(frames_key)(hammerhead_frame_key, hammer_head_frame_name);
  config_(global_controller)(frames_key)(nail_frame_key, nail_frame_name);
