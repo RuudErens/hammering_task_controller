@@ -26,17 +26,16 @@ robots:
   nail:
     module: object/nail
     init_pos:
-      translation: [0.55, 0.30 , 0.9]
+      translation: [0.4, 0.0 , 0.9] # originally [0.4, 0.30 , 0.9]
       rotation: [0, 0, 0] # [roll, pitch, yaw] applied in the order yaw-pitch-roll with rotation matrices
 
 
-
 # General constraints, always on
-constraints:
-- type: contact
+#constraints:
+#- type: contact
 # - type: dynamics
 #   damper: [0.1, 0.01, 0.5]
-- type: compoundJoint
+#- type: compoundJoint
 
 # Collision constraint
 collisions:
@@ -49,13 +48,13 @@ collisions:
   #   body1: hammer
   #   body2: nail
 
-contacts:
-- r2: ground
-  r1Surface: LeftFoot
-  r2Surface: AllGround
-- r2: ground
-  r1Surface: RightFoot
-  r2Surface: AllGround
+#contacts:
+#- r2: ground
+#  r1Surface: LeftFoot
+#  r2Surface: AllGround
+#- r2: ground
+#  r1Surface: RightFoot
+#  r2Surface: AllGround
 
 global_controller_params:
   timestep: 0.002 #s, in the mc rtc config file
@@ -73,6 +72,7 @@ global_controller_params:
   magic_values:
     #No real meaning behind these values
     magic_force_threshold: 1
+    max_number_of_hits: 50
 
     # Values for impulse constraint
     c_res: 1
@@ -85,7 +85,27 @@ global_controller_params:
     damping: [ 0.1, 0.01, 0.5 ]
     velocity_percentage: 0.9
 
-
+  stabilizer:
+    torso:
+      stiffness: 10.0 # default 10.0
+      weight: 100.0 # default 100.0
+    pelvis:
+      stiffness: 10.0 # default 10.0
+      weight: 100.0 # default 100.0
+    dcm:
+      p: [4.0, 4.0] # [x, y]; default [4.0, 4.0]
+      i: [10.0, 10.0] # [x, y]; default [10.0, 10.0]
+      d: [0.5, 0.5] # [x, y]; default [0.5 0.5]
+    com:
+      stiffness: [1000.,1000.,1000.] # default [1000.,1000.,1000.]
+      weight: 1000.0 # default 1000.0
+#      height: 0.92
+#      dimWeight: [1 , 1 , 1]
+    contact:
+      weight: 100000.0 # default 100000.0
+      stiffness: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # first 3 angular, last 3 linear; default [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      damping: [300.0, 300.0, 300.0, 300.0, 300.0, 300.0] # first 3 angular, last 3 linear; default [300.0, 300.0, 300.0, 300.0, 300.0, 300.0]
+      admittance: [0.008, 0.008] # [x, y]; default [0.008, 0.008]
 
 states:
 
@@ -99,35 +119,41 @@ states:
       #Set to 0 to disable BSplineTask
       magic_BSpline_task_weight: 100
       
-      magic_BSpline_max_duration: 1 #seconds
-      magic_BSpline_task_stiffness: 60000
-      magic_BSpline_task_dimweight_x: 1
-      magic_BSpline_task_dimweight_y: 1
-      magic_BSpline_task_dimweight_z: 1
+      magic_BSpline_max_duration: 2 #seconds
+      magic_BSpline_task_stiffness: 250
+      magic_BSpline_task_damping: 40
+      magic_BSpline_task_dimweight_tx: 1
+      magic_BSpline_task_dimweight_ty: 1
+      magic_BSpline_task_dimweight_tz: 1
+      magic_BSpline_task_dimweight_rx: 0
+      magic_BSpline_task_dimweight_ry: 0
+      magic_BSpline_task_dimweight_rz: 0
 
       magic_posture_task_weight: 1
       magic_posture_task_stiffness: 1
+#      magic_posture_task_weight: 1
+#      magic_posture_task_stiffness: 10
 
       #Set to 0 to disable EMMT
       magic_effective_mass_maximization_task_weight: 5
 
       #Set to 0 to disable VectorOrientationTask
-      magic_vector_orientation_task_weight: 10
+      magic_vector_orientation_task_weight: 10 # default 10
+      magic_vector_orientation_task_stiffness: 10 # default 60
+#      magic_vector_orientation_task_damping: 20 # default 60
 
-      magic_vector_orientation_task_stiffness: 60
-
-      gripper_task_min_stiffness: 60
+      gripper_task_min_stiffness: 500
       gripper_task_max_stiffness: 20000
       gripper_task_goal_error: 0.0001
       gripper_task_s: 0.5
-      gripper_task_weight: 100
+      gripper_task_weight: 10
 
       # Number of timesteps between every logging instance
       logging_freq: 50
 
     curve_constraints:
       # Normal velocity of the hammer tip at the nail
-      magic_normal_final_velocity: [0, 0, -2]
+      magic_normal_final_velocity: [0, 0, -1]
       
       linear_velocity:
         x:
@@ -159,13 +185,18 @@ states:
       magic_posture_task_weight: 1
       magic_posture_task_stiffness: 1
       magic_posture_task_epsilon: 0.15
+
+      transform_task_stiffness: 30
+      transform_task_damping: 25
+      transform_task_weight: 200
+
       magic_BSpline_task_dimweight_x: 1
       magic_BSpline_task_dimweight_y: 1
       magic_BSpline_task_dimweight_z: 1
 
     curve_constraints:
       # Normal velocity of the hammer tip at the nail
-      magic_normal_final_velocity: [0, 0, -2]
+      magic_normal_final_velocity: [0, 0, -1]
 
       linear_velocity:
         x:
@@ -192,54 +223,74 @@ states:
     tasks:
       CoM:
         type: com
-        com: [0.0, 0.0, 1.00]
-        weight: 3000
-        stiffness: 100  
+        com: [0.0, 0.0, 0.80]
+        weight: 100
+        stiffness: 5
         
-  #LIPM
+#  #LIPM
+#  Hammer::Standing:
+#    base: MetaTasks
+#    tasks:
+#      Stabilizer:
+#        type: lipm_stabilizer
+#        enabled: true
+#        contacts: [Left, Right]
+#        leftFootSurface: LeftFootCenter
+#        rightFootSurface: RightFootCenter
+#        torsoBodyName: Chest_Link2
+#
+#        dcm_tracking:
+#          gains:
+#            prop: [0,0]
+#            integral: [0,0]
+#            deriv: [0., 0.]
+#            comdError: 0.
+#        admittance:
+#          copFzLambda: [30,30,30]
+#          copFzDelay: 0.0
+#          df: [0.0, 0.0, 0.0001]
+#          cop: [0.01, 0.01]
+#          maxVel:
+#            angular: [3., 3., 3.]
+#            linear: [1., 1., 1.]
+#        tasks:
+#          contact:
+#            constrainCoP: false
+#            damping: 150.0
+#          com:
+#            stiffness: [100.,100.,100.]
+#            dimWeight: [1 , 1 , 1]
+#            weight: 5000
+#            height: 0.92
+
   Hammer::Standing:
-    base: MetaTasks
-    tasks:
-      Stabilizer:
-        type: lipm_stabilizer
-        enabled: true
-        contacts: [Left, Right]
-        leftFootSurface: LeftFootCenter
-        rightFootSurface: RightFootCenter
-        torsoBodyName: Chest_Link2
+    base: StabilizerStandingState
+    # This stiffness controls the spring-damper computation of the reference CoM position
+    # damping is automatically computed as 2*sqrt(stiffness)
+    stiffness: 5
+    # StabilizerTask configuration (see previous section)
+    StabilizerConfig:
+      type: lipm_stabilizer
+      leftFootSurface: LeftFootCenter
+      rightFootSurface: RightFootCenter
+      enabled: true
+      contacts: [Left, Right]
 
-        dcm_tracking:
-          gains:
-            prop: [0,0]
-            integral: [0,0]
-            deriv: [0., 0.]
-            comdError: 0.
-        admittance:
-          copFzLambda: [30,30,30]
-          copFzDelay: 0.0
-          df: [0.0, 0.0, 0.0001]
-          cop: [0.01, 0.01]
-          maxVel:
-            angular: [3., 3., 3.]
-            linear: [1., 1., 1.]
-        tasks:
-          contact:
-            constrainCoP: false
-            damping: 150.0
-          com:
-            stiffness: [100.,100.,100.]
-            dimWeight: [1 , 1 , 1]
-            weight: 5000
-            height: 0.92
-
-      
-  Initial_And_Standing_LIPM: 
+  Initial_And_Standing_LIPM:
     base: Parallel
     states: [Hammer::Standing, HammeringTaskNew_Initial]
 
-  Get_In_Position_And_Standing_LIPM: 
+  Get_In_Position_And_Standing_LIPM:
     base: Parallel
     states: [Hammer::Standing, Hammer::Get_In_Position_Task]
+
+  Post_Impact_And_Standing_LIPM:
+    base: Parallel
+    states: [Hammer::Standing, Hammer::Post_Impact_Task]
+
+  Initial_And_Standing_COM:
+    base: Parallel
+    states: [CoM, HammeringTaskNew_Initial]
 
 
 
@@ -248,8 +299,14 @@ states:
     base: Meta
     transitions:
       - [HammeringTaskNew_Initial, BUTTON_CLICKED, Hammer::Get_In_Position_Task, Auto]
+#      - [Hammer::Get_In_Position_Task, STOP, HammeringTaskNew_Initial, Auto]
       - [Hammer::Get_In_Position_Task, STOP, Hammer::Post_Impact_Task, Auto]
       - [Hammer::Post_Impact_Task, STOP, HammeringTaskNew_Initial, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
+
+#      - [Initial_And_Standing_LIPM, BUTTON_CLICKED, Get_In_Position_And_Standing_LIPM, Auto]
+#      - [Get_In_Position_And_Standing_LIPM, STOP, Initial_And_Standing_LIPM, Auto]
+#      - [Get_In_Position_And_Standing_LIPM, STOP, Post_Impact_And_Standing_LIPM, Auto]
+#      - [Post_Impact_And_Standing_LIPM, STOP, Initial_And_Standing_LIPM, Auto] # TODO: let it go to some other task that does not initialize the logging etc again
 
 
 # Transitions map
@@ -261,8 +318,13 @@ init: Hammer::HammeringFSM
 
 hrp5_p:
   posture:
-    stiffness: 5
-    weight: 1
+#    stiffness: 5
+#    weight: 50
+    stiffness: 10
+    weight: 5
+#  com:
+#    stiffness: 100
+#    weight: 3000
   
 ObserverPipelines:
   name: "ObserverPipeline"
@@ -278,7 +340,29 @@ ObserverPipelines:
       config:
         anchorFrame:
           maxAnchorFrameDiscontinuity: 0.05 # [m]
-    - type: BodySensor
-      update: true
-      config:  
+    - type: BodySensor # This is not possible on the real robot
+      update: false
+      config:
         bodySensor: FloatingBase
+    - type: Tilt
+      required: true
+      update: true
+      config:
+#        anchorFrameFunction: anchorFrameFunction
+        leggedOdometry:
+          kappa: 10
+          lambdaInf: 0.001
+          correctContacts: true
+          odometryType: Flat
+        filterGains:
+          initAlpha: 100 # 5 # 0.0
+          initBeta: 1 # 1 # 0.0 # 0.00001
+          initGamma: 2 # 2 # 0.0
+          finalAlpha: 100 # 5 # 0.0
+          finalBeta: 1 # 1 # 0.0 # 0.00001
+          finalGamma: 2 # 2 # 0.0
+        contacts:
+          contactsDetection: Surfaces
+          surfacesForContactDetection: [RightFootCenter, LeftFootCenter] # [LeftHandCloseContact]
+          schmittTriggerLowerPropThreshold: 0.0
+          schmittTriggerUpperPropThreshold: 0.0

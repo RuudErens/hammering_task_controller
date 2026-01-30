@@ -14,6 +14,7 @@
 #include <mc_tasks/PositionTask.h>
 #include <mc_trajectory/BSpline.h>
 #include <mc_solver/ImpulseConstraint.h>
+// #include <mc_solver/CoMIncPlaneConstr.h>
 
 #include <memory>
 #include <ndcurves/curve_constraint.h>
@@ -52,6 +53,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
     std::shared_ptr<mc_tasks::BSplineTrajectoryTask> _BSplineVel;
     // std::shared_ptr<mc_tasks::ExactCubicTrajectoryTask> _BSplineVel2;
     std::shared_ptr<mc_tasks::VectorOrientationTask> _vectorOrientationTask;
+    // std::unique_ptr<mc_solver::>
     mc_trajectory::BSpline::waypoints_t _posWp = {};
     std::vector<std::pair<double, Eigen::Matrix3d>> _oriWp = {};
 
@@ -71,6 +73,7 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     std::shared_ptr<mc_tasks::TransformTask> _transform_task;
 
+    Eigen::VectorXd dimweights_posture;// = Eigen::VectorXd::Ones();
 
     bool stop = false;
     
@@ -134,7 +137,14 @@ struct Get_In_Position_Task : mc_control::fsm::State
 
     double _magic_BSpline_max_duration = 1.0f;
     double _magic_BSpline_task_stiffness = 1.0f; 
+    double _magic_BSpline_task_damping = 1.0f;
     double _magic_BSpline_task_weight = 1.0f;
+    double _magic_BSpline_task_dimweight_tx = 1.0f;
+    double _magic_BSpline_task_dimweight_ty = 1.0f;
+    double _magic_BSpline_task_dimweight_tz = 1.0f;
+    double _magic_BSpline_task_dimweight_rx = 1.0f;
+    double _magic_BSpline_task_dimweight_ry = 1.0f;
+    double _magic_BSpline_task_dimweight_rz = 1.0f;
 
     //V^w_f,in, c.f. article    
     Eigen::Vector3d _magic_normal_final_velocity = {0, 0, 0};
@@ -143,15 +153,24 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_posture_task_weight = 1.0f;
     double _magic_posture_task_stiffness = 1.0f;
 
+    const std::vector<std::string> Left_arm_joints = {
+        "LSC",
+        "LSP",
+        "LSR",
+        "LSY",
+        "LEP",
+        "LWRY",
+        "LWRR",
+        "LWRP",
+        "LHDY"
+    };
+
     //W_m, c.f. article or internship report
     double _magic_effective_mass_maximization_task_weight = 1.0f;
 
-
-    double _magic_BSpline_task_dimweight_x = 1.0f;
-    double _magic_BSpline_task_dimweight_y = 1.0f;
-    double _magic_BSpline_task_dimweight_z = 1.0f;
     double _magic_vector_orientation_task_weight = 1.0f;
     double _magic_vector_orientation_task_stiffness = 1.0f;
+    double _magic_vector_orientation_task_damping = 1.0f;
 
     double _gripper_task_weight = 1.0f;
     double _gripper_task_min_stiffness = 1.0f;

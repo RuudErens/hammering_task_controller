@@ -9,6 +9,8 @@
 #include <mc_tasks/PostureTask.h>
 #include <ndcurves/curve_constraint.h>
 
+#include <mc_tasks/lipm_stabilizer/StabilizerTask.h>
+#include <mc_tasks/lipm_stabilizer/Contact.h>
 
 // Ros node
 #include <geometry_msgs/msg/vector3_stamped.hpp>
@@ -51,14 +53,24 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     double effective_mass = 0.0f;
     Eigen::Vector3d hammer_tip_actual_velocity_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_actual_position_vector = {0, 0, 0};
+    Eigen::Vector3d hammer_tip_actual_position_vector_realrobot = {0, 0, 0};
+    Eigen::Vector3d hammer_tip_position_observer_error = {0, 0, 0};
+    Eigen::Vector3d floating_base_position_observer_error = {0, 0, 0};
+
     Eigen::Vector3d hammer_tip_reference_velocity_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_reference_position_vector = {0, 0, 0};
     Eigen::Vector3d bspline_tracking_error;
+    Eigen::VectorXd bspline_eval;
+    double bspline_eval_norm = 0.0f;
     bool bspline_active_ = false;
     double projected_momentum_of_hammer_tip = 0.0f;
     double vector_orientation_error = 0.0f;
 
     std::vector<std::vector<double>> base_posture_vector;
+    double base_posture_weight = 1.0f;
+    double base_posture_stiffness = 1.0f;
+
+    int trajectories_executed = 0;
 
     // constraints
     std::array<double, 3> _damping/* = {0.1, 0.01, 0.5}*/;
@@ -72,7 +84,27 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     double _dt_multi;
     std::unique_ptr<mc_solver::ImpulseConstraint> impulseConstraint;
 
-    // ------------------------------ Parameters ---------------------------------------------  
+
+    std::unique_ptr<mc_solver::ContactConstraint> contactConstraintSet;
+
+    // Tasks
+    std::shared_ptr<mc_tasks::lipm_stabilizer::StabilizerTask> stabilizerTask;
+    mc_rbdyn::lipm_stabilizer::StabilizerConfiguration stabiConf;
+
+    double _torso_task_stiffness = 1.0f;
+    double _torso_task_weight = 1.0f;
+    double _pelvis_task_stiffness = 1.0f;
+    double _pelvis_task_weight = 1.0f;
+    Eigen::Vector2d _dcm_p = Eigen::Vector2d::Zero();
+    Eigen::Vector2d _dcm_i = Eigen::Vector2d::Zero();
+    Eigen::Vector2d _dcm_d = Eigen::Vector2d::Zero();
+    Eigen::Vector3d _com_stiffness = Eigen::Vector3d::Zero();
+    double _com_weight = 1.0f;
+    double _contact_task_weight = 1.0f;
+    sva::MotionVecd _contact_stiffness = sva::MotionVecd::Zero();
+    sva::MotionVecd _contact_damping = sva::MotionVecd::Zero();
+    Eigen::Vector2d _contact_admittance = Eigen::Vector2d::Zero();
+    // ------------------------------ Parameters ---------------------------------------------
     // Parameters loaded in the load_parameters function, parameters are found in the HammeringTaskNew.in.yaml file
     // Don't ask me why there is a '.in' in the name of the file, I don't know 
     
@@ -94,7 +126,43 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     // Minimum force to detect an impact on the nail
     double magic_force_threshold = 1;
-    
+
+    double stabilizing_eval_norm;
+    double stabilizing_speed_norm;
+
+    Eigen::VectorXd com_eval;
+    Eigen::VectorXd pelvis_eval;
+    Eigen::VectorXd torso_eval;
+    Eigen::VectorXd contacts_eval;
+
+    double com_eval_norm;
+    double pelvis_eval_norm;
+    double torso_eval_norm;
+    double contacts_eval_norm;
+
+    double last_hitting_angle = 0.0f;
+    double last_hitting_angle_bodysensor = 0.0f;
+    Eigen::Vector3d last_hitting_point = Eigen::Vector3d::Zero();
+    Eigen::Vector3d last_hitting_point_error_tilt = Eigen::Vector3d::Zero();
+    Eigen::Vector3d last_hitting_point_error_bodysensor = Eigen::Vector3d::Zero();
+    double previous_hitting_angle = 0.0f;
+    double previous_hitting_angle_bodysensor = 0.0f;
+    Eigen::Vector3d previous_hitting_point = Eigen::Vector3d::Zero();
+    Eigen::Vector3d previous_hitting_point_error_tilt = Eigen::Vector3d::Zero();
+    Eigen::Vector3d previous_hitting_point_error_bodysensor = Eigen::Vector3d::Zero();
+    bool hitting_data_to_log = false;
+    bool hitting_logging_entry_to_remove = false;
+    bool force_felt = false;
+    bool hittingforce_data_to_log = false;
+    bool hittingforce_logging_entry_to_remove = false;
+    int number_of_hits = 0;
+
+    // Robot double:
+    std::shared_ptr<mc_rbdyn::Robots> comparisonRobots_;
+    // Helper to access it easily
+    const mc_rbdyn::BodySensor & floatingBaseSensor_ = robot().bodySensor("FloatingBase");
+
+    int max_number_of_hits = 50;
 
   private:
     /**
