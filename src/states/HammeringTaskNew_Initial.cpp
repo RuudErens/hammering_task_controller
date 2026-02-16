@@ -89,6 +89,8 @@ bool HammeringTaskNew_Initial::run(mc_control::fsm::Controller & ctl_)
     ctl.logger().removeLogEntry("Hitting_point before hitting");
     ctl.logger().removeLogEntry("Hitting_pointErrorTilt before hitting");
     ctl.logger().removeLogEntry("Hitting_pointErrorBodySensor before hitting");
+    ctl.logger().removeLogEntry("Hitting_ProjectedMomentum");
+    ctl.logger().removeLogEntry("Hitting_ProjectedMomentum before hitting");
     ctl.hitting_logging_entry_to_remove = false;
   }
 
@@ -104,6 +106,8 @@ bool HammeringTaskNew_Initial::run(mc_control::fsm::Controller & ctl_)
     {return ctl.last_hitting_point_error_tilt;});
     ctl.logger().addLogEntry("Hitting_pointErrorBodySensor", this, [&, this]()
     {return ctl.last_hitting_point_error_bodysensor;});
+    ctl.logger().addLogEntry("Hitting_ProjectedMomentum", this, [&, this]()
+    {return ctl.last_projected_momentum_of_hammer_tip;});
     ctl.logger().addLogEntry("Hitting_angle before hitting", this, [&, this]()
     {return ctl.previous_hitting_angle;});
     ctl.logger().addLogEntry("Hitting_angle bodysensor before hitting", this, [&, this]()
@@ -114,6 +118,8 @@ bool HammeringTaskNew_Initial::run(mc_control::fsm::Controller & ctl_)
     {return ctl.previous_hitting_point_error_tilt;});
     ctl.logger().addLogEntry("Hitting_pointErrorBodySensor before hitting", this, [&, this]()
     {return ctl.previous_hitting_point_error_bodysensor;});
+    ctl.logger().addLogEntry("Hitting_ProjectedMomentum before hitting", this, [&, this]()
+    {return ctl.previous_projected_momentum_of_hammer_tip;});
     ctl.hitting_logging_entry_to_remove = true;
     ctl.hitting_data_to_log = false;
   }

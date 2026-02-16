@@ -72,14 +72,14 @@ global_controller_params:
   magic_values:
     #No real meaning behind these values
     magic_force_threshold: 1
-    max_number_of_hits: 50
+    max_number_of_hits: 1
 
     # Values for impulse constraint
     c_res: 1
     delta_t: 0.001
-    lambda_high: 500
-    lambda_low: 125
-    impulsive_tau_limit_multiplier: 2
+    lambda_high: 125
+    lambda_low: 25
+    impulsive_tau_limit_multiplier: 1
 
     #values for dynamic constraint
     damping: [ 0.1, 0.01, 0.5 ]
@@ -90,8 +90,8 @@ global_controller_params:
       stiffness: 10.0 # default 10.0
       weight: 100.0 # default 100.0
     pelvis:
-      stiffness: 10.0 # default 10.0
-      weight: 100.0 # default 100.0
+      stiffness: 100000.0 # default 10.0
+      weight: 100000000.0 # default 100.0
     dcm:
       p: [4.0, 4.0] # [x, y]; default [4.0, 4.0]
       i: [10.0, 10.0] # [x, y]; default [10.0, 10.0]
@@ -99,7 +99,7 @@ global_controller_params:
     com:
       stiffness: [1000.,1000.,1000.] # default [1000.,1000.,1000.]
       weight: 1000.0 # default 1000.0
-#      height: 0.92
+      height: 0.92
 #      dimWeight: [1 , 1 , 1]
     contact:
       weight: 100000.0 # default 100000.0
@@ -118,7 +118,6 @@ states:
 
       #Set to 0 to disable BSplineTask
       magic_BSpline_task_weight: 100
-      
       magic_BSpline_max_duration: 2 #seconds
       magic_BSpline_task_stiffness: 250
       magic_BSpline_task_damping: 40
@@ -135,7 +134,8 @@ states:
 #      magic_posture_task_stiffness: 10
 
       #Set to 0 to disable EMMT
-      magic_effective_mass_maximization_task_weight: 5
+      magic_effective_mass_maximization_task_weight: 1
+      magic_posture_task_weight_local: 1
 
       #Set to 0 to disable VectorOrientationTask
       magic_vector_orientation_task_weight: 10 # default 10

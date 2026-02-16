@@ -51,6 +51,8 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
 
     // Logs
     double effective_mass = 0.0f;
+    double effective_mass_diff = 0.0f;
+    double eff_mass_diff_checker = 0.f;
     Eigen::Vector3d hammer_tip_actual_velocity_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_actual_position_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_actual_position_vector_realrobot = {0, 0, 0};
@@ -141,11 +143,13 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     double contacts_eval_norm;
 
     double last_hitting_angle = 0.0f;
+    double last_projected_momentum_of_hammer_tip = 0.0f;
     double last_hitting_angle_bodysensor = 0.0f;
     Eigen::Vector3d last_hitting_point = Eigen::Vector3d::Zero();
     Eigen::Vector3d last_hitting_point_error_tilt = Eigen::Vector3d::Zero();
     Eigen::Vector3d last_hitting_point_error_bodysensor = Eigen::Vector3d::Zero();
     double previous_hitting_angle = 0.0f;
+    double previous_projected_momentum_of_hammer_tip = 0.0f;
     double previous_hitting_angle_bodysensor = 0.0f;
     Eigen::Vector3d previous_hitting_point = Eigen::Vector3d::Zero();
     Eigen::Vector3d previous_hitting_point_error_tilt = Eigen::Vector3d::Zero();

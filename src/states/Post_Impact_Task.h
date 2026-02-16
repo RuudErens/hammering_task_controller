@@ -37,6 +37,8 @@ struct Post_Impact_Task : mc_control::fsm::State
 
     double duration = 0.f;
 
+    double previous_effective_mass = 0.f;
+
     /**
     @brief Returns the values needed to modify the posture task to the half sitting posture (the default posture)
      */

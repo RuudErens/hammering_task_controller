@@ -7,27 +7,13 @@ HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const
 : mc_control::fsm::Controller(rm, dt, config, Backend::TVM)
 {
 
-  auto surfaces = robot().surfaces();
-  for(const auto & surface : surfaces)
-  {
-    if (robot().surfaceHasForceSensor(surface.first))
-    {
-      mc_rtc::log::info("mc_rtc says {} has a force sensor, if it throws mc_rtc is a big dirty liar!!!!", surface.first);
-      mc_rtc::log::info("Surface {} has force sensor {}", surface.first, robot().surfaceForceSensor(surface.first).name());
-    }
-    else if (robot().surfaceHasIndirectForceSensor(surface.first))
-    {
-      mc_rtc::log::info("mc_rtc says {} has an indirect force sensor, if it throws mc_rtc is a big dirty liar!!!!", surface.first);
-      mc_rtc::log::info("Surface {} has indirect force sensor {}", surface.first, robot().indirectSurfaceForceSensor(surface.first).name());
-    }
-  }
 
   config_.load(config);
   datastore().make<std::string>("ControlMode", "Position");
   datastore().make<std::string>("Coriolis", "Yes"); 
   load_parameters();
 
-  effective_mass = compute_effective_mass_with_mbc();
+  // effective_mass = compute_effective_mass_with_mbc();
   add_logs();
   nh = mc_rtc::ROSBridge::get_node_handle();
   // Not the cleanest but at leat mc_mujoco does not crash
@@ -219,7 +205,7 @@ const double HammeringTaskNew::compute_effective_mass_with_mbc(){
   //  Access Full Jacobian of the robot
   rbd::MultiBody robot_mb = robot().mb();
   rbd::Jacobian jac(robot_mb, hammer_head_frame_name);
-  Eigen::MatrixXd world_frame_jacobian = jac.jacobian(robot_mb, mbc);
+  Eigen::MatrixXd world_frame_jacobian = jac.bodyJacobian(robot_mb, mbc);
   Eigen::MatrixXd full_world_frame_jacobian(6, robot().mb().nrDof());
   jac.fullJacobian(robot_mb, world_frame_jacobian, full_world_frame_jacobian);
 
@@ -326,6 +312,12 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Effective mass [kg]", this, [&, this]()
     {return effective_mass;});
 
+    logger().addLogEntry("Effective mass diff", this, [&, this]()
+    {return effective_mass_diff;});
+
+    logger().addLogEntry("Effective mass diff checker", this, [&, this]()
+    {return eff_mass_diff_checker;});
+
     logger().addLogEntry("Hammer tip velocity [m/s]", this, [&, this]()
     {return hammer_tip_actual_velocity_vector;});
       
@@ -416,7 +408,7 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Stabilizing_contact_eval", this, [&, this]()
     {return contacts_eval;});
 
-  logger().addLogEntry("Completed_trajectories", this, [&, this]()
+    logger().addLogEntry("Completed_trajectories", this, [&, this]()
     {return trajectories_executed;});
 
 }

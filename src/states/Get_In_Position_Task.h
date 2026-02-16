@@ -153,17 +153,92 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _magic_posture_task_weight = 1.0f;
     double _magic_posture_task_stiffness = 1.0f;
 
-    const std::vector<std::string> Left_arm_joints = {
-        "LSC",
-        "LSP",
-        "LSR",
-        "LSY",
-        "LEP",
+    const std::vector<std::string> mass_maximization_active_joints = {
+        "LCY" ,
+        "LCR" ,
+        "LCP" ,
+        "LKP" ,
+        "LAP" ,
+        "LAR" ,
+        "RCY" ,
+        "RCR" ,
+        "RCP" ,
+        "RKP" ,
+        "RAP" ,
+        "RAR" ,
+        "WP"  ,
+        "WR"  ,
+        "WY"  ,
+        "HY"  ,
+        "HP"  ,
+        "LSC" ,
+        "LSP" ,
+        "LSR" ,
+        "LSY" ,
+        "LEP" ,
         "LWRY",
         "LWRR",
         "LWRP",
-        "LHDY"
+        "LHDY",
+        "RSC" ,
+        "RSP" ,
+        "RSR" ,
+        "RSY" ,
+        "REP" ,
+        "RWRY",
+        "RWRR",
+        "RWRP",
+        "RHDY"
     };
+    int joint_selector_logging_counter = 0;
+
+    // Joint name to qJoints index map (inline static so it's header-safe)
+    inline static const std::unordered_map<std::string, int> joint_index_map = {
+        {"LCY" , 0},
+        {"LCR" , 1},
+        {"LCP" , 2},
+        {"LKP" , 3},
+        {"LAP" , 4},
+        {"LAR" , 5},
+        {"RCY" , 6},
+        {"RCR" , 7},
+        {"RCP" , 8},
+        {"RKP" , 9},
+        {"RAP" , 10},
+        {"RAR" , 11},
+        {"WP"  , 12},
+        {"WR"  , 13},
+        {"WY"  , 14},
+        {"HY"  , 15},
+        {"HP"  , 16},
+        {"LSC" , 17},
+        {"LSP" , 18},
+        {"LSR" , 19},
+        {"LSY" , 20},
+        {"LEP" , 21},
+        {"LWRY", 22},
+        {"LWRR", 23},
+        {"LWRP", 24},
+        {"LHDY", 25},
+        {"RSC" , 26},
+        {"RSP" , 27},
+        {"RSR" , 28},
+        {"RSY" , 29},
+        {"REP" , 30},
+        {"RWRY", 31},
+        {"RWRR", 32},
+        {"RWRP", 33},
+        {"RHDY", 34}
+        };
+
+    // Accessor: returns index or -1 if not found
+    static int jointIndex(const std::string & name)
+    {
+        auto it = joint_index_map.find(name);
+        return (it != joint_index_map.end()) ? it->second : -1;
+    }
+
+    bool already_logged = false;
 
     //W_m, c.f. article or internship report
     double _magic_effective_mass_maximization_task_weight = 1.0f;
@@ -361,7 +436,9 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _old_reduced_effective_mass_mbc = 1;
     std::vector<double> _ratios;
     double _old_effective_mass_encoders = 1;   
-    
+
+    double previous_effective_mass = 0.f;
+
     // Debug iterator
     int iii = 0;
 
