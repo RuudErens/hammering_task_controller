@@ -253,7 +253,9 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
 
   ctl.effective_mass = compute_effective_mass_with_mbc(_new_mbc, ctl, ctl.nail_normal_vector_world_frame);
   ctl.effective_mass_diff = (ctl.effective_mass - previous_effective_mass)/ctl.solver().dt();
+  ctl.effective_mass_diff_diff = (ctl.effective_mass_diff - previous_eff_mass_diff)/ctl.solver().dt();
   previous_effective_mass = ctl.effective_mass;
+  previous_eff_mass_diff = ctl.effective_mass_diff;
 
   // ctl.hammer_tip_actual_velocity_vector = ctl.robot().frame(ctl.hammer_head_frame_name).velocity().linear();
   // ctl.hammer_tip_actual_position_vector = ctl.robot().frame(ctl.hammer_head_frame_name).position().translation();
@@ -309,13 +311,13 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
     joint_selector(joint_index, joint_index) = 1.0;
   }
 
-  Eigen::VectorXd feedforward_term = -(_magic_effective_mass_maximization_task_weight/pow(_magic_posture_task_weight,2.0)) * joint_selector * _gradient_of_m;
+  Eigen::VectorXd feedforward_term = (_magic_effective_mass_maximization_task_weight/_magic_posture_task_weight) * joint_selector * _gradient_of_m.tail(ctl.robot().tvmRobot().qJoints()->size());
   ctl.getPostureTask(ctl.robot().name())->refAccel(feedforward_term);
 
   auto q_d = ctl.robot().tvmRobot().alpha()->value();
   Eigen::VectorXd q_d_selected = q_d.tail(number_of_joints);
 
-  ctl.eff_mass_diff_checker = _gradient_of_m.transpose()*q_d_selected;
+  ctl.eff_mass_diff_checker = _gradient_of_m.transpose()*q_d;
 
   // End state at impact
   ctl.impact_detected = abs(ctl.nail_force_vector.x()) >= ctl.magic_force_threshold || 
@@ -732,12 +734,16 @@ const Eigen::VectorXd Get_In_Position_Task::compute_emass_gradient_three_point_b
   HammeringTaskNew &ctl = static_cast<HammeringTaskNew &>(ctl_);
 
   const double epsilon = 1E-6;
-  Eigen::VectorXd grad(ctl.robot().tvmRobot().qJoints()->size(), 1);
-  grad.setOnes();
+  Eigen::VectorXd grad(ctl.robot().mb().nrDof(), 1);
+  grad.setZero();
   double backward_effective_mass = 0;
   double m_q = compute_effective_mass_with_mbc(mbc, ctl_, normal_vector);
-  
+
   unsigned int j = 0;
+  if (ctl.robot().mb().nrDof() > ctl.robot().tvmRobot().qJoints()->size())
+  {
+    j = ctl.robot().mb().nrDof() - ctl.robot().tvmRobot().qJoints()->size(); // Start after the floating base DOFs
+  }
   rbd::MultiBodyConfig p1;
   rbd::MultiBodyConfig p2;
 
@@ -753,6 +759,7 @@ const Eigen::VectorXd Get_In_Position_Task::compute_emass_gradient_three_point_b
     if(mbc.q.at(i).size() != 1)
     {
       // Ignore floating base and fixed joints
+      // TODO: Implement the gradient for the floating base DOFs as well (take in mind to not predefine j to be the size of the floating base DOFs but to update it in the loop)
       continue;
     }
     // dqi = mbc.q.at(i).at(0) - _old_mbc.q.at(i).at(0);

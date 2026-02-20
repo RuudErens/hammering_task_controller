@@ -52,6 +52,7 @@ struct HammeringTaskNew_DLLAPI HammeringTaskNew : public mc_control::fsm::Contro
     // Logs
     double effective_mass = 0.0f;
     double effective_mass_diff = 0.0f;
+    double effective_mass_diff_diff = 0.0f;
     double eff_mass_diff_checker = 0.f;
     Eigen::Vector3d hammer_tip_actual_velocity_vector = {0, 0, 0};
     Eigen::Vector3d hammer_tip_actual_position_vector = {0, 0, 0};

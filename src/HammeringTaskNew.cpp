@@ -312,8 +312,11 @@ void HammeringTaskNew::add_logs()
     logger().addLogEntry("Effective mass [kg]", this, [&, this]()
     {return effective_mass;});
 
-    logger().addLogEntry("Effective mass diff", this, [&, this]()
+    logger().addLogEntry("Effective mass derivative", this, [&, this]()
     {return effective_mass_diff;});
+
+    logger().addLogEntry("Effective mass double derivative", this, [&, this]()
+    {return effective_mass_diff_diff;});
 
     logger().addLogEntry("Effective mass diff checker", this, [&, this]()
     {return eff_mass_diff_checker;});

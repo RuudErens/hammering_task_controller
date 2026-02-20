@@ -438,6 +438,8 @@ struct Get_In_Position_Task : mc_control::fsm::State
     double _old_effective_mass_encoders = 1;   
 
     double previous_effective_mass = 0.f;
+    double previous_eff_mass_diff = 0.f;
+
 
     // Debug iterator
     int iii = 0;
