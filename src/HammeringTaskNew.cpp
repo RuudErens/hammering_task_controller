@@ -6,14 +6,11 @@
 HammeringTaskNew::HammeringTaskNew(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config, Backend::TVM)
 {
-
-
   config_.load(config);
-  datastore().make<std::string>("ControlMode", "Position");
+  datastore().make<std::string>("ControlMode", "Torque");
   datastore().make<std::string>("Coriolis", "Yes"); 
   load_parameters();
 
-  // effective_mass = compute_effective_mass_with_mbc();
   add_logs();
   nh = mc_rtc::ROSBridge::get_node_handle();
   // Not the cleanest but at leat mc_mujoco does not crash
@@ -184,7 +181,7 @@ bool HammeringTaskNew::run()
   // torso_eval_norm = 0;
   // contacts_eval_norm = 0;
 
-  return mc_control::fsm::Controller::run(mc_solver::FeedbackType::OpenLoop); // TODO: set to closedloop
+  return mc_control::fsm::Controller::run(mc_solver::FeedbackType::ClosedLoopIntegrateReal); // TODO: set to closedloop
 
 }
 

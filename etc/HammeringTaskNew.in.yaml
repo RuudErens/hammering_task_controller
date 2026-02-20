@@ -90,8 +90,8 @@ global_controller_params:
       stiffness: 10.0 # default 10.0
       weight: 100.0 # default 100.0
     pelvis:
-      stiffness: 100000.0 # default 10.0
-      weight: 100000000.0 # default 100.0
+      stiffness: 10.0 # default 10.0
+      weight: 100.0 # default 100.0
     dcm:
       p: [4.0, 4.0] # [x, y]; default [4.0, 4.0]
       i: [10.0, 10.0] # [x, y]; default [10.0, 10.0]
@@ -117,10 +117,10 @@ states:
       #No real meaning behind these values
 
       #Set to 0 to disable BSplineTask
-      magic_BSpline_task_weight: 100
+      magic_BSpline_task_weight: 300
       magic_BSpline_max_duration: 2 #seconds
-      magic_BSpline_task_stiffness: 250
-      magic_BSpline_task_damping: 40
+      magic_BSpline_task_stiffness: 400
+      magic_BSpline_task_damping: 50
       magic_BSpline_task_dimweight_tx: 1
       magic_BSpline_task_dimweight_ty: 1
       magic_BSpline_task_dimweight_tz: 1
@@ -138,8 +138,8 @@ states:
       magic_posture_task_weight_local: 1
 
       #Set to 0 to disable VectorOrientationTask
-      magic_vector_orientation_task_weight: 10 # default 10
-      magic_vector_orientation_task_stiffness: 10 # default 60
+      magic_vector_orientation_task_weight: 30 # default 10
+      magic_vector_orientation_task_stiffness: 60 # default 60
 #      magic_vector_orientation_task_damping: 20 # default 60
 
       gripper_task_min_stiffness: 500
