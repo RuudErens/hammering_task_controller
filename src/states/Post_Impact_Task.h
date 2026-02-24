@@ -4,6 +4,7 @@
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/PostureTask.h>
 #include <mc_tasks/TransformTask.h>
+#include "../HammeringTaskNew.h"
 #include <memory>
 
 struct Post_Impact_Task : mc_control::fsm::State
@@ -19,6 +20,11 @@ struct Post_Impact_Task : mc_control::fsm::State
   void teardown(mc_control::fsm::Controller & ctl_) override;
 
   private:
+    /**
+     * @brief log the data
+     * @param ctl
+     */
+    void log_hitting_data(HammeringTaskNew& ctl);
 
     std::shared_ptr<mc_tasks::PostureTask> _postureTask;
     std::shared_ptr<mc_tasks::TransformTask> _transform_task;

@@ -320,9 +320,9 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
   ctl.eff_mass_diff_checker = _gradient_of_m.transpose()*q_d;
 
   // End state at impact
-  ctl.impact_detected = abs(ctl.nail_force_vector.x()) >= ctl.magic_force_threshold || 
-                        abs(ctl.nail_force_vector.y()) >= ctl.magic_force_threshold || 
-                        abs(ctl.nail_force_vector.z()) >= ctl.magic_force_threshold;
+  ctl.impact_detected = abs(ctl.nail_force_vector.x()) >= ctl.impact_detection_force_threshold ||
+                        abs(ctl.nail_force_vector.y()) >= ctl.impact_detection_force_threshold ||
+                        abs(ctl.nail_force_vector.z()) >= ctl.impact_detection_force_threshold;
 
   double impact_detection_position_threshold = 0.02;
   bool impact_trhough_position = _total_time_elapsed > 0.95*_magic_BSpline_max_duration && ctl.hammer_tip_actual_position_vector[2] <= _end_point[2];
@@ -480,9 +480,6 @@ bool Get_In_Position_Task::run(mc_control::fsm::Controller & ctl_)
     // ctl.logger().removeLogEntry("Hitting_angle");
     // ctl.logger().removeLogEntry("Hitting_point");
     // ctl.logger().removeLogEntry("Hitting_pointError");
-
-    ctl.hitting_data_to_log = true;
-    ctl.hittingforce_data_to_log = true;
 
     output("STOP");
     return true;
@@ -1453,6 +1450,7 @@ void Get_In_Position_Task::add_logs(mc_control::fsm::Controller & ctl_)
 
   ctl.logger().addLogEntry("Bspline eval", this, [&, this]()
   {return ctl.bspline_eval;});
+
   ctl.logger().addLogEntry("Bspline eval norm", this, [&, this]()
   {return ctl.bspline_eval_norm;});
 

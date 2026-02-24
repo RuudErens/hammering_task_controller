@@ -1,9 +1,7 @@
 #include "Post_Impact_Task.h"
-#include "../HammeringTaskNew.h"
 #include <mc_rtc/logging.h>
 #include <mc_tasks/PostureTask.h>
 #include <memory>
-
 
 void Post_Impact_Task::configure(const mc_rtc::Configuration & config)
 {
@@ -82,6 +80,7 @@ bool Post_Impact_Task::run(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<HammeringTaskNew &>(ctl_);
 
+    log_hitting_data(ctl);
     // log_values(ctl_);
 
     duration += ctl.solver().dt();
@@ -216,6 +215,80 @@ const std::vector<std::vector<double>> Post_Impact_Task::getHalfSittingPositionV
     }
     res.push_back(halfSittingVector);
     return res;
+}
+
+void Post_Impact_Task::log_hitting_data(HammeringTaskNew& ctl)
+{
+    if (ctl.hitting_logging_entry_to_remove)
+    {
+        ctl.logger().removeLogEntry("Hitting_angle");
+        ctl.logger().removeLogEntry("Hitting_angle bodysensor");
+        ctl.logger().removeLogEntry("Hitting_point");
+        ctl.logger().removeLogEntry("Hitting_pointErrorTilt");
+        ctl.logger().removeLogEntry("Hitting_pointErrorBodySensor");
+        ctl.logger().removeLogEntry("Hitting_angle before hitting");
+        ctl.logger().removeLogEntry("Hitting_angle bodysensor before hitting");
+        ctl.logger().removeLogEntry("Hitting_point before hitting");
+        ctl.logger().removeLogEntry("Hitting_pointErrorTilt before hitting");
+        ctl.logger().removeLogEntry("Hitting_pointErrorBodySensor before hitting");
+        ctl.logger().removeLogEntry("Hitting_ProjectedMomentum");
+        ctl.logger().removeLogEntry("Hitting_ProjectedMomentum before hitting");
+        ctl.hitting_logging_entry_to_remove = false;
+    }
+
+    if (ctl.hitting_data_to_log)
+    {
+        ctl.logger().addLogEntry("Hitting_angle", this, [&, this]()
+        {
+            return ctl.last_hitting_angle;
+        });
+        ctl.logger().addLogEntry("Hitting_angle bodysensor", this, [&, this]()
+        {
+            return ctl.last_hitting_angle_bodysensor;
+        });
+        ctl.logger().addLogEntry("Hitting_point", this, [&, this]()
+        {
+            return ctl.last_hitting_point;
+        });
+        ctl.logger().addLogEntry("Hitting_pointErrorTilt", this, [&, this]()
+        {
+            return ctl.last_hitting_point_error_tilt;
+        });
+        ctl.logger().addLogEntry("Hitting_pointErrorBodySensor", this, [&, this]()
+        {
+            return ctl.last_hitting_point_error_bodysensor;
+        });
+        ctl.logger().addLogEntry("Hitting_ProjectedMomentum", this, [&, this]()
+        {
+            return ctl.last_projected_momentum_of_hammer_tip;
+        });
+        ctl.logger().addLogEntry("Hitting_angle before hitting", this, [&, this]()
+        {
+            return ctl.previous_hitting_angle;
+        });
+        ctl.logger().addLogEntry("Hitting_angle bodysensor before hitting", this, [&, this]()
+        {
+            return ctl.previous_hitting_angle_bodysensor;
+        });
+        ctl.logger().addLogEntry("Hitting_point before hitting", this, [&, this]()
+        {
+            return ctl.previous_hitting_point;
+        });
+        ctl.logger().addLogEntry("Hitting_pointErrorTilt before hitting", this, [&, this]()
+        {
+            return ctl.previous_hitting_point_error_tilt;
+        });
+        ctl.logger().addLogEntry("Hitting_pointErrorBodySensor before hitting", this, [&, this]()
+        {
+            return ctl.previous_hitting_point_error_bodysensor;
+        });
+        ctl.logger().addLogEntry("Hitting_ProjectedMomentum before hitting", this, [&, this]()
+        {
+            return ctl.previous_projected_momentum_of_hammer_tip;
+        });
+        ctl.hitting_logging_entry_to_remove = true;
+        ctl.hitting_data_to_log = false;
+    }
 }
 
 EXPORT_SINGLE_STATE("Post_Impact_Task", Post_Impact_Task)
