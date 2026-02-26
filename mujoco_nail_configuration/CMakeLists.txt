@@ -1,5 +1,3 @@
-#set(MC_MUJOCO_SHARE_DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mc_mujoco")
-find_package(mc_mujoco REQUIRED)
 set(YAML_OUT "${CMAKE_CURRENT_BINARY_DIR}/nail.yaml")
 configure_file(nail.in.yaml "${YAML_OUT}")
 install(FILES "${YAML_OUT}"

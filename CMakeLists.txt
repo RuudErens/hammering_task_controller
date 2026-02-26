@@ -14,6 +14,8 @@ if(NOT TARGET mc_rtc::mc_control)
   find_package(mc_rtc REQUIRED)
 endif()
 
+find_package(mc_mujoco REQUIRED)
+
 add_subdirectory(src)
 add_subdirectory(plugin)
 add_subdirectory(mujoco_nail_configuration)
