@@ -1,0 +1,42 @@
+<mujoco model="nail">
+    <compiler meshdir="assets" texturedir="assets"/>
+    <asset>
+        <mesh name="nail_mesh" file="../meshes/nail/nail.stl"/>
+    </asset>
+
+    <default>
+        <default class="collision">
+            <geom condim="3" group="0" />
+        </default>
+        <default class="visual">
+            <geom condim="3" group="1" conaffinity="0" contype="0" />
+        </default>
+    </default>
+
+    <extension>
+        <plugin plugin="MujocoRosUtils::SensorPublisher"/>
+    </extension>
+
+    <worldbody>
+        <body name="base_link" pos="0 0 -0.1" euler="1.57 0 0">
+            <light mode="fixed" directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="0 0 -4.0" dir="0 0 1" />
+
+            <geom class="visual" type="mesh" mesh="nail_mesh" />
+            <geom class="collision" type="mesh" mesh="nail_mesh" />
+            
+            <site name="tip_of_nail" size="0.001" pos="0.0 0.0 0" />
+
+        </body>
+    </worldbody>
+
+    <sensor>
+        <force name="force_sensor" site="tip_of_nail"/>
+        <plugin name="sensor_publisher_scalar" plugin="MujocoRosUtils::SensorPublisher" objtype="site" objname="tip_of_nail">
+            <config key="sensor_name" value="nail_force_sensor"/>
+            <config key="frame_id" value="nail"/>
+            <config key="topic_name" value="/nail_force_sensor"/>
+            <config key="publish_rate" value="30"/>
+        </plugin>
+    </sensor>
+
+</mujoco>

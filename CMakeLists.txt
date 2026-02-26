@@ -16,6 +16,7 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(plugin)
+add_subdirectory(mujoco_nail_configuration)
 
 set(AROBASE "@")
 configure_file(etc/HammeringTaskNew.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/HammeringTaskNew.yaml")
